@@ -1,38 +1,55 @@
 /* eslint-disable */
 <template>
-  <div class="map">
-    <baidu-map :zoom="zoom" @ready="handler" style="width:100%;height:100%" @click="getClickInfo"
-               :scroll-wheel-zoom='true'>
-      <bm-city-list anchor="BMAP_ANCHOR_TOP_RIGHT"></bm-city-list>
-    </baidu-map>
+  <div>
+    <search-wrap></search-wrap>
+    <city-list></city-list>
+    <div class="map">
+      <baidu-map :zoom="zoom" @ready="handler" style="width:100%;height:100%" @click="getClickInfo"
+                 :scroll-wheel-zoom='true'
+                 :center="'杭州'"
+      >
+        <bm-marker :position="markerPoint" :dragging="true">
+
+        </bm-marker>
+      </baidu-map>
+    </div>
   </div>
 </template>
 <script>
+import searchWrap from "@/components/search/searchWrap";
+import cityList from "@/components/lib-map/cityList";
 export default {
   name: 'TestBaiDu',
   data () {
     return {
       center: { lng: 109.45744048529967, lat: 36.49771311230842 },
-      zoom: 13
+      zoom: 13,
+      BMap: null
     }
+  },
+  components: {
+    searchWrap,
+    cityList
   },
   methods: {
       handler({ BMap, map }) {
+        console.log('BMap,map',BMap,map)
       // 初始化地图,设置中心点坐标
+      this.BMap = BMap
       let point = new BMap.Point(119.8025089500, 25.4890556400)
       map.centerAndZoom(point, 13)
 
-      // 添加鼠标滚动缩放
-      map.enableScrollWheelZoom()
-      // 添加缩略图控件
-      map.addControl(new BMap.OverviewMapControl({ isOpen: false, anchor: BMAP_ANCHOR_BOTTOM_RIGHT }))
-      // 添加缩放平移控件
-      map.addControl(new BMap.NavigationControl());
-      //添加比例尺控件
-      map.addControl(new BMap.ScaleControl());
+      // // 添加鼠标滚动缩放
+      // map.enableScrollWheelZoom()
+      // // 添加缩略图控件
+      // map.addControl(new BMap.OverviewMapControl({ isOpen: false, anchor: BMAP_ANCHOR_BOTTOM_RIGHT }))
+      // // 添加缩放平移控件
+      // map.addControl(new BMap.NavigationControl());
+      // //添加比例尺控件
+      // map.addControl(new BMap.ScaleControl());
 
-      map.setMapStyle({
-        styleId: 'baab47c6fa5dcdcbea17611febadf609'
+      map.setMapStyleV2({
+        styleId: '75a8ee3dba6ff183c466fad55e4d49c2'
       });
 
       this.getCurlocation()
@@ -58,13 +75,11 @@ export default {
       // map.openInfoWindow(infoWindow, point)
     },
       getClickInfo(e) {
-        console.log(e)
-        console.log(e.point.lat)
-        this.center.lng = e.point.lng
-        this.center.lat = e.point.lat
+        this.getAddrByPoint(e.point)
       },
 
       getCurlocation() { // 获取浏览器当前定位
+        debugger
         if (!this.BMap) return false
         let BMap = this.BMap
         let geolocation = new BMap.Geolocation()
@@ -75,7 +90,23 @@ export default {
           _this.shop_lng = r.point.lng
           _this.shop_lat = r.point.lat
         })
-    }},
+    },
+    /**
+     * 逆地址解析函数（根据坐标点获取详细地址）
+     * @param {Object} point   百度地图坐标点，必传
+     */
+      getAddrByPoint(point){
+        debugger
+        var that = this;
+        var geco = new BMap.Geocoder();
+        geco.getLocation(point, function(res){
+          console.log(res)  //内容见下图
+          that.BMap.panTo(point)  //将地图的中心点更改为给定的点
+          that.form.address = res.address;  //记录该点的详细地址信息
+          that.form.addrPoint = point;  //记录当前坐标点
+        })
+      }
+    },
   mounted() {
   }
 }
