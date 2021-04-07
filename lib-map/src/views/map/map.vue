@@ -2,16 +2,8 @@
 <template>
   <div>
     <search-wrap></search-wrap>
-    <city-list></city-list>
-    <div class="map">
-      <baidu-map :zoom="zoom" @ready="handler" style="width:100%;height:100%" @click="getClickInfo"
-                 :scroll-wheel-zoom='true'
-                 :center="'杭州'"
-      >
-        <bm-marker :position="markerPoint" :dragging="true">
-
-        </bm-marker>
-      </baidu-map>
+    <city-list @mark="handleMark"></city-list>
+    <div id="map">
     </div>
   </div>
 </template>
@@ -24,7 +16,7 @@ export default {
     return {
       center: { lng: 109.45744048529967, lat: 36.49771311230842 },
       zoom: 13,
-      BMap: null
+      map: null
     }
   },
   components: {
@@ -98,21 +90,56 @@ export default {
       getAddrByPoint(point){
         debugger
         var that = this;
-        var geco = new BMap.Geocoder();
+        var geco = new window.BMapGL.Geocoder();
         geco.getLocation(point, function(res){
-          console.log(res)  //内容见下图
-          that.BMap.panTo(point)  //将地图的中心点更改为给定的点
-          that.form.address = res.address;  //记录该点的详细地址信息
-          that.form.addrPoint = point;  //记录当前坐标点
+          console.log(res)
+         // that.BMapGL.panTo(point)  //将地图的中心点更改为给定的点
+         //  that.form.address = res.address;  //记录该点的详细地址信息
+         //  that.form.addrPoint = point;  //记录当前坐标点
         })
-      }
+      },
+      init() {
+        this.map = new window.BMapGL.Map("map", { enableMapClick: false }); // 创建Map实例,GL版命名空间为BMapGL(鼠标右键控制倾斜角度)
+        this.map.centerAndZoom(new window.BMapGL.Point(116.404, 39.915), 11); // 初始化地图,设置中心点坐标和地图级别
+        this.map.enableScrollWheelZoom(true); // 开启鼠标滚轮缩放
+       // this.map.setCurrentCity("杭州");
+        console.log(this.map)
+        // this.map.setMapStyleV2({
+        //   styleId: 'baab47c6fa5dcdcbea17611febadf609'
+        // });
+        this.map.disableDragging()
+        // this.map.setDefaultCursor('url("./sign_32.ico"),auto;');
+        this.map.setDefaultCursor("http://172.19.80.62:81/gwstatic/static/company_web/public/sign.cur")
+      },
+      handleMark() {
+        debugger
+        this.map.setDefaultCursor("http://172.19.80.62:81/gwstatic/static/company_web/public/sign.cur")
+
+        this.map.addEventListener('click', e => { //给地图绑定点击事件
+          this.getAddrByPoint(e.point) //点击后调用逆地址解析函数
+          this.markOnMap(e.point)
+        })
+      },
+     markOnMap(p) {
+        debugger
+       const lng = p.lng, lat = p.lat
+       const point = new BMapGL.Point(lng, lat)
+       const marker = new BMapGL.Marker(point);        // 创建标注
+       this.map.addOverlay(marker);                     // 将标注添加到地图中
+     }
+
+
+
     },
   mounted() {
+    this.init()
   }
 }
 </script>
 <style lang="less">
-.map {
-  height: 1000px;
+#map {
+  width: 1440px;
+  height: 688px;
+  cursor: url("./sign.svg") 3 6, default;
 }
 </style>

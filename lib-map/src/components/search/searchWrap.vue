@@ -146,7 +146,7 @@ export default {
 .fix-body {
   position: fixed;
   display: flex;
-  z-index: 1;
+  z-index: 6;
   justify-content: center;
   top: 60px;
   left: 20px;

@@ -8,7 +8,7 @@
           <a-icon type="caret-up" v-if="!caret" />
 
         </a-button>
-        <a-button class="environment">
+        <a-button class="environment" @click="handleMark">
           <a-icon type="environment" />
           标记查找
         </a-button>
@@ -56,6 +56,9 @@ import { city } from "@/assets/city";
 
 export default {
   name: "cityList",
+  props: {
+
+  },
   data() {
     return {
       hotList: [
@@ -207,6 +210,10 @@ export default {
     handleClick() {
       this.caret = !this.caret
       this.cityVisible = !this.cityVisible
+    },
+    handleMark() {
+      this.$emit('mark')
+
     }
   }
 }
@@ -217,7 +224,7 @@ export default {
   position: fixed;
   top: 60px;
   left: 484px;
-  z-index: 1;
+  z-index: 6;
   display: flex;
   justify-content: center;
   flex-direction: column;
@@ -254,10 +261,10 @@ export default {
 
 .city-menu {
   .caret {
-    width: 68px;
+    width: 88px;
   }
   .environment {
-    width: 100px;
+    width: 110px;
   }
 }
 
