@@ -19,6 +19,7 @@
           <span class="moreUl-type" :class="{'type-address': item.type == '地址'}">{{item.type}}</span>
           <span class="moreUl-address">{{item.address}}</span>
         </li>
+        <li v-if="empty" class="empty">未找到相关地点，请输入精确名称再次搜索</li>
       </ul>
     </div>
     <span class="search-btn">
@@ -40,7 +41,11 @@ export default {
         name: `<em class="hl">浙江</em>园林设计院南部宏达分院股份有限公司`,
         title: '浙江核新同花顺网络信息股份有限公司',
         type: '企业',
-        address: '杭州余杭区'
+        address: '杭州余杭区',
+        point: {
+          lng: 'yy',
+          lat: 'xx'
+        }
       },
         {
           name: `<em class="hl">杭州</em>园林设计院南部宏达分院股份有限公司`,
@@ -85,12 +90,19 @@ export default {
       ],
       moreUlSelect: -1,
       moreUlSelectNum: 7,
-      moreUlSelectText: '请输入公司名称或地址展示周围企业'
+      moreUlSelectText: '请输入公司名称或地址展示周围企业',
+      empty: false
     }
   },
   methods: {
     searchClick() {},
-    searchInput() {},
+    searchInput() {
+      const url = ''
+      const data = {
+        keyword: this.inputValue
+      }
+      this.$getAxios(url, data, res => this.handleSuggest(res))
+    },
     inputFocus() {
       this.moreUlVisible = true
     },
@@ -117,10 +129,17 @@ export default {
          this.moreUlSelectText = this.moreUlData[this.moreUlSelect].title
 
        }
+      }else if(keyCode === 'Enter') {
+        this.$emit('focus')
       }
-    },
+     },
     inputBlur() {
       this.moreUlVisible = false
+    },
+    handleSuggest(res) {
+      if(res.code == 1) {
+        this.moreUlData = res.data
+      }
     }
   },
   mounted() {
@@ -218,6 +237,12 @@ export default {
           color: #ED2D00;
           font-style: normal;
         }
+      }
+      &.empty {
+        font-family: Microsoft YaHei;
+        font-size: 14px;
+        color: #7D7D94;
+        line-height: 22px;
       }
     }
 

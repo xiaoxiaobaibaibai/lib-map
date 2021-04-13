@@ -214,7 +214,19 @@ export default {
     handleMark() {
       this.$emit('mark')
 
+    },
+    handleCityList(res) {
+      if(res.code == 1) {
+        this.city = res.data
+      }
+    },
+    getCityList() {
+      const url = 'http://software.myhexin.com/yapi/mock/2486/standardgwapi/api/company_library/map/area_config'
+      this.$getAxios(url, undefined, res => this.handleCityList(res))
     }
+  },
+  created() {
+    this.getCityList()
   }
 }
 </script>
@@ -298,6 +310,7 @@ export default {
     .city-search {
       margin-left: auto;
       margin-right: 16px;
+      position: relative;
     }
 
   }
@@ -382,6 +395,7 @@ export default {
             font-size: 14px;
             color: #272841;
             line-height: 22px;
+            width: 44px;
           }
           .sec-city {
             width: 280px;

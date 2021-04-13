@@ -6,6 +6,7 @@
 
 <style lang="less">
 #app {
+  overflow: hidden;
   height: 100%;
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;

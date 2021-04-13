@@ -3,40 +3,43 @@
     <ul style="'soild 1px yellow'" class="drawing-panel">
       <li class="bmap-btn bmap-circle" id="circle" @click="draw($event)"></li>
     </ul>
-    <div id="container"></div>
   </div>
 </template>
 
 <script>
+import map from "@/views/map/map";
+
 export default {
   name: 'draw',
+  props: {
+    map: Object
+  },
   data() {
     return {
-      map: "", // 地图对象
       drawingManager: "", // 绘制管理器
       centerPoint: null, // 中心点
       label: null,
-      polyline: null
+      polyline: null,
     };
   },
+  // computed: {
+  //   map: function () {
+  //     return this
+  //   }
+  // },
   mounted() {
     this.init();
   },
   methods: {
     init() {
-      this.map = new window.BMapGL.Map("container", { enableMapClick: false }); // 创建Map实例,GL版命名空间为BMapGL(鼠标右键控制倾斜角度)
-      this.map.centerAndZoom(new window.BMapGL.Point(116.404, 39.915), 11); // 初始化地图,设置中心点坐标和地图级别
-      this.map.enableScrollWheelZoom(true); // 开启鼠标滚轮缩放
-      console.log(this.map)
-
-      var styleOptions = {
+      const styleOptions = {
         strokeColor: "#5E87DB", // 边线颜色
         fillColor: "#5E87DB", // 填充颜色。当参数为空时，圆形没有填充颜色
         strokeWeight: 2, // 边线宽度，以像素为单位
         strokeOpacity: 1, // 边线透明度，取值范围0-1
         fillOpacity: 0.2 // 填充透明度，取值范围0-1
       };
-      var labelOptions = {
+      const labelOptions = {
         borderRadius: "2px",
         background: "#FFFBCC",
         border: "1px solid #E1E1E1",
@@ -47,7 +50,7 @@ export default {
       };
 
       // 实例化鼠标绘制工具
-      this.drawingManager = new window.BMapGLLib.DrawingManager(this.map, {
+      this.drawingManager = new window.BMapLib.DrawingManager(this.map, {
         // isOpen: true,        // 是否开启绘制模式
         enableCalculate: true, // 绘制是否进行测距测面
         enableSorption: TextTrackCue, // 是否开启边界吸附功能
@@ -137,7 +140,7 @@ export default {
     },
 
     /**
-     * 花半径
+     * 半径
      */
     showRadis(event) {
       var radius = this.drawingManager._map.getDistance(
@@ -150,9 +153,9 @@ export default {
         //添加文字标签
         var opts = {
           position: event.point, // 指定文本标注所在的地理位置（当前鼠标的位置）
-          offset: new window.BMapGL.Size(5, -15) //设置文本偏移量
+          offset: new window.BMap.Size(5, -15) //设置文本偏移量
         };
-        this.label = new window.BMapGL.Label(
+        this.label = new window.BMap.Label(
           (radius / 1000).toFixed(2) + "公里",
           opts
         ); // 创建文本标注对象
@@ -165,7 +168,7 @@ export default {
           backgroundColor: "" //#2267AD
         });
         //从圆心画半径
-        this.polyline = new window.BMapGL.Polyline(
+        this.polyline = new window.BMap.Polyline(
           [this.centerPoint, event.point],
           {
             strokeColor: "red",
