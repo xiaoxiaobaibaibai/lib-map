@@ -17,14 +17,14 @@
     <div class="city" v-if="cityVisible">
       <div class="title">
         <span class="title-name">当前城市：</span>
-        <span class="title-city">杭州</span>
+        <span class="title-city">{{currentCity}}</span>
         <div class="city-search">
-          <search-input></search-input>
+          <search-input @select="handleCity"></search-input>
         </div>
       </div>
       <div class="city-hot-list">
         <section class="city-name">
-          <span v-for="item in hotList">{{item.name}}</span>
+          <span v-for="item in hotList" @click="handleCity(item.name)">{{item.name}}</span>
         </section>
         <section class="city-initials">
           <span v-for="(item,index) in initials" :class="{active: activeInitials == index}" @click="handleInitialsClick(index)">{{item.name}}</span>
@@ -39,7 +39,7 @@
                 <span>{{el.province}}</span>
               </section>
               <section class="sec-city">
-                <span v-for="city in el.city">{{city}}</span>
+                <span v-for="city in el.city" @click="handleCity(city)">{{city}}</span>
               </section>
             </div>
           </div>
@@ -223,6 +223,11 @@ export default {
     getCityList() {
       const url = 'http://software.myhexin.com/yapi/mock/2486/standardgwapi/api/company_library/map/area_config'
       this.$getAxios(url, undefined, res => this.handleCityList(res))
+    },
+    handleCity(str) {
+      this.currentCity = str
+      this.$emit('select', str)
+      this.cityVisible = false
     }
   },
   created() {

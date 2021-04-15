@@ -17,7 +17,7 @@
     />
   </section>
   <ul class="moreUl" v-if="moreUlVisible">
-    <li v-for="(item,index) in moreUlData" :class="{'active': index == moreUlSelect}">
+    <li v-for="(item,index) in moreUlData" :class="{'active': index == moreUlSelect}" @click="handleCity(item.name)">
       <span class="moreUl-name" v-html="item.matchWord"></span>
       <span class="moreUl-address">{{item.belongArea}}</span>
     </li>
@@ -37,44 +37,57 @@ export default {
       moreUlData: [
         {
           belongArea: "吉林省吉林市",
-          matchWord: "<em class='hl'>吉林</em>市"
+          matchWord: "<em class='hl'>吉林</em>市",
+          name: '吉林市'
         },
         {
           belongArea: "",
-          matchWord: "<em class='hl'>吉林</em>省"
+          matchWord: "<em class='hl'>吉林</em>省",
+          name: '吉林市'
         },        {
           belongArea: "",
-          matchWord: "<em class='hl'>吉林</em>省"
+          matchWord: "<em class='hl'>吉林</em>省",
+          name: '吉林市'
         },        {
           belongArea: "",
-          matchWord: "<em class='hl'>吉林</em>省"
+          matchWord: "<em class='hl'>吉林</em>省",
+          name: '吉林市'
         },        {
           belongArea: "",
-          matchWord: "<em class='hl'>吉林</em>省"
+          matchWord: "<em class='hl'>吉林</em>省",
+          name: '吉林市'
         },        {
           belongArea: "",
-          matchWord: "<em class='hl'>吉林</em>省"
+          matchWord: "<em class='hl'>吉林</em>省",
+          name: '吉林市'
         },        {
           belongArea: "",
-          matchWord: "<em class='hl'>吉林</em>省"
+          matchWord: "<em class='hl'>吉林</em>省",
+          name: '吉林市'
         },        {
           belongArea: "",
-          matchWord: "<em class='hl'>吉林</em>省"
+          matchWord: "<em class='hl'>吉林</em>省",
+          name: '吉林市'
         },        {
           belongArea: "",
-          matchWord: "<em class='hl'>吉林</em>省"
+          matchWord: "<em class='hl'>吉林</em>省",
+          name: '吉林市'
         },        {
           belongArea: "",
-          matchWord: "<em class='hl'>吉林</em>省"
+          matchWord: "<em class='hl'>吉林</em>省",
+          name: '吉林市'
         },        {
           belongArea: "",
-          matchWord: "<em class='hl'>吉林</em>省"
+          matchWord: "<em class='hl'>吉林</em>省",
+          name: '吉林市'
         },        {
           belongArea: "",
-          matchWord: "<em class='hl'>吉林</em>省"
+          matchWord: "<em class='hl'>吉林</em>省",
+          name: '吉林市'
         },        {
           belongArea: "",
-          matchWord: "<em class='hl'>吉林</em>省"
+          matchWord: "<em class='hl'>吉林</em>省",
+          name: '吉林市'
         },
       ],
       moreUlSelect: 0
@@ -82,7 +95,18 @@ export default {
   },
   methods: {
     searchClick() {},
-    searchInput() {},
+    searchInput() {
+      const url = '/standardgwapi/api/company_library/map/area_suggest'
+      const data = {
+        keyword: this.inputValue
+      }
+      this.$getAxios(url, data, res => this.handleSuggest(res))
+    },
+    handleSuggest(res) {
+      if(res.code == 1) {
+        this.moreUlData = res.data
+      }
+    },
     inputFocus() {
       this.moreUlVisible = true
     },
@@ -93,26 +117,29 @@ export default {
       if (keyCode === 'ArrowDown') {
         if (this.moreUlSelect == -1 || this.moreUlSelect == this.moreUlSelectNum) {
           this.moreUlSelect = 0
-          this.moreUlSelectText = this.moreUlData[0].belongArea
+          this.moreUlSelectText = this.moreUlData[0].name
         }else {
           this.moreUlSelect ++
-          this.moreUlSelectText = this.moreUlData[this.moreUlSelect].belongArea
+          this.moreUlSelectText = this.moreUlData[this.moreUlSelect].name
         }
       }else if(keyCode === 'ArrowUp'){
         if (this.moreUlSelect == -1 || this.moreUlSelect == 0) {
           this.moreUlSelect = this.moreUlSelectNum
-          this.moreUlSelectText = this.moreUlData[this.moreUlSelect].belongArea
+          this.moreUlSelectText = this.moreUlData[this.moreUlSelect].name
 
         }
         else {
           this.moreUlSelect--
-          this.moreUlSelectText = this.moreUlData[this.moreUlSelect].belongArea
+          this.moreUlSelectText = this.moreUlData[this.moreUlSelect].name
 
         }
       }
     },
     inputBlur() {
       this.moreUlVisible = false
+    },
+    handleCity(name) {
+      this.$emit('select',name)
     }
   },
   mounted() {

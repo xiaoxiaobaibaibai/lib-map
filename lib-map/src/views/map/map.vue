@@ -1,11 +1,9 @@
 /* eslint-disable */
 <template>
-  <div>
+  <div class="container">
     <search-wrap @focus="handleFocusMarher"></search-wrap>
-    <city-list @mark="handleMark"></city-list>
-    <ul style="'soild 1px yellow'" class="drawing-panel">
-      <li class="bmap-btn bmap-circle" id="circle" @click="draw($event)"></li>
-    </ul>
+    <city-list @mark="handleMark" @select="mapCenter"></city-list>
+    <div id="selectbox_Drawing" class="selectbox_Drawing"></div>
     <div id="map">
     </div>
   </div>
@@ -16,6 +14,7 @@ import cityList from "@/components/lib-map/cityList";
 import { style  } from "@/assets/mapstyle";
 import { mapConstant } from "@/assets/city";
 import draw from "@/components/lib-map/draw";
+
 
 export default {
   name: 'TestBaiDu',
@@ -86,10 +85,19 @@ export default {
         const styleOptions = {
           strokeColor: "#5E87DB", // 边线颜色
           fillColor: "#5E87DB", // 填充颜色。当参数为空时，圆形没有填充颜色
-          strokeWeight: 2, // 边线宽度，以像素为单位
+          strokeWeight: 1, // 边线宽度，以像素为单位
           strokeOpacity: 1, // 边线透明度，取值范围0-1
           fillOpacity: 0.2 // 填充透明度，取值范围0-1
         };
+
+        const LineOptions = {
+          strokeColor: "transparent", // 边线颜色
+          fillColor: "#5E87DB", // 填充颜色。当参数为空时，圆形没有填充颜色
+          strokeWeight: 1, // 边线宽度，以像素为单位
+          strokeOpacity: 1, // 边线透明度，取值范围0-1
+          fillOpacity: 0.2 // 填充透明度，取值范围0-1
+        };
+
         const labelOptions = {
           borderRadius: "2px",
           background: "#FFFBCC",
@@ -102,12 +110,32 @@ export default {
 
         // 实例化鼠标绘制工具
         this.drawingManager = new window.BMapLib.DrawingManager(this.map, {
-          // isOpen: true,        // 是否开启绘制模式
-          enableCalculate: true, // 绘制是否进行测距测面
-          enableSorption: TextTrackCue, // 是否开启边界吸附功能
-          sorptiondistance: 20, // 边界吸附距离
+          enableDrawingTool: true, // 是否显示工具栏
+          enableCalculate: true, // 绘制是否进行测距(画线时候)、测面(画圆、多边形、矩形)
+          drawingToolOptions: {
+            enableTips: true,
+            customContainer: 'selectbox_Drawing',
+            hasCustomStyle: true,
+            offset: new BMap.Size(5, 5), // 偏离值
+            scale: 0.8, // 工具栏缩放比例
+            drawingModes: [
+              BMAP_DRAWING_RECTANGLE
+              , BMAP_DRAWING_POLYGON
+              , BMAP_DRAWING_CIRCLE
+            ]
+          },
+          enableSorption: true, // 是否开启边界吸附功能
+          sorptionDistance: 20, // 边界吸附距离
+          enableGpc: true, // 是否开启延边裁剪功能
+          enbaleLimit: true,  // 是否开启超限提示
+          limitOptions: {
+            area: 50000000 // 面积超限值
+          },
           circleOptions: styleOptions, // 圆的样式
-          labelOptions: labelOptions // label样式
+          polylineOptions: LineOptions, // 线的样式
+          polygonOptions: styleOptions, // 多边形的样式
+          rectangleOptions: styleOptions, // 矩形的样式
+          labelOptions: labelOptions // label的样式
         });
 
         //添加鼠标绘制工具监听事件，用于获取绘制结果
@@ -127,7 +155,7 @@ export default {
       },
       handleMark() {
         debugger
-        this.map.setDefaultCursor("url('./sign.cur')  3 6, default")
+        this.map.setDefaultCursor("url('http://172.19.80.62:81/gwstatic/static/company_web/public/sign.cur')  3 6, default")
         this.map.disableDragging()
         this.map.disableScrollWheelZoom()
 
@@ -135,6 +163,7 @@ export default {
           this.getAddrByPoint(e.point) //点击后调用逆地址解析函数
           this.markOnMap(e.point)
         })
+
       },
       markOnMap(p) {
         debugger
@@ -222,6 +251,7 @@ export default {
      * 画圆
      */
     draw(event) {
+      debugger
       this.centerPoint = null; // 中心点
       this.label = null;
       this.polyline = null;
@@ -324,10 +354,33 @@ export default {
         this.map.addOverlay(this.polyline); //添加半径直线
         this.map.addOverlay(this.label); //添加label
       }
+    },
+
+    mapCenter(str) {
+      this.getPointByAddress(str)
+      this.map.centerAndZoom(str)
+    },
+
+      /**
+       * baidu服务 地址转坐标
+       */
+    getPointByAddress(address, ak = 'fw9CfWuMOO6cfrERuEFKL4FOIUGQQ3dj') {
+
+      const url = `http://api.map.baidu.com/geocoding/v3/`
+      const data = {
+        ak,
+        address
+      }
+
+      this.$getAxios(url,data,res => this.handlePointByAddress(res))
+    },
+    handlePointByAddress(res) {
+      //{"status":0,"result":{"location":{"lng":116.3084202915042,"lat":40.05703033345938},"precise":1,"confidence":80,"comprehension":100,"level":"门址"}}
+      if(res.status == 0) {
+        console.log('location',res.result.location)
+        return res.result.location
+      }
     }
-
-
-
     },
   created() {
   },
@@ -338,11 +391,17 @@ export default {
 }
 </script>
 <style lang="less">
-#map {
-  width: 1440px;
-  height: 688px;
-  cursor: url("./sign.svg") 3 6, default;
+div.container {
+  width: 100%;
+  height: 100%;
+  #map {
+    width: 100%;
+
+    height: 100%;
+    cursor: url("./sign.svg") 3 6, default;
+  }
 }
+
 
 label.BMapLabel {
   .map-info {
@@ -362,54 +421,5 @@ label.BMapLabel {
 }
 
 
-ul li {
-  list-style: none;
-}
-.info {
-  z-index: 999;
-  width: auto;
-  min-width: 22rem;
-  padding: 0.75rem 1.25rem;
-  margin-left: 1.25rem;
-  position: fixed;
-  top: 1rem;
-  background-color: #fff;
-  border-radius: 0.25rem;
-  font-size: 14px;
-  color: #666;
-  box-shadow: 0 2px 6px 0 rgba(27, 142, 236, 0.5);
-}
-.drawing-panel {
-  z-index: 999;
-  position: fixed;
-  bottom: 3.5rem;
-  margin-left: 2.5rem;
-  padding-left: 0;
-  border-radius: 0.25rem;
-  height: 47px;
-  box-shadow: 0 2px 6px 0 rgba(27, 142, 236, 0.5);
-}
-.bmap-btn {
-  border-right: 1px solid #d2d2d2;
-  float: left;
-  width: 64px;
-  height: 100%;
-  background-image: url(//api.map.baidu.com/library/DrawingManager/1.4/src/bg_drawing_tool.png);
-  cursor: pointer;
-}
-.drawing-panel .bmap-marker {
-  background-position: -65px 0;
-}
-.drawing-panel .bmap-polyline {
-  background-position: -195px 0;
-}
-.drawing-panel .bmap-rectangle {
-  background-position: -325px 0;
-}
-.drawing-panel .bmap-polygon {
-  background-position: -260px 0;
-}
-.drawing-panel .bmap-circle {
-  background-position: -130px 0;
-}
+
 </style>

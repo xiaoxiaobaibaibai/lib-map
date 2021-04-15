@@ -7,6 +7,9 @@ import searchWrap from "@/components/search/searchWrap";
 import draw from "@/components/lib-map/draw";
 import drawer from  "@/components/lib-map/drawer";
 import tip from "@/components/lib-map/tip";
+import dramDemo from "@/components/lib-map/dramDemo";
+import card from "@/components/lib-map/card";
+
 Vue.use(VueRouter)
 
 const routes = [
@@ -52,6 +55,16 @@ const routes = [
     path: '/tip',
     name: 'tip',
     component: tip
+  },
+  {
+    path: '/dramDemo',
+    name: 'dramDemo',
+    component: dramDemo
+  },
+  {
+    path: '/card',
+    name: 'card',
+    component: card
   }
 ]
 
