@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        body{
+            display: flex;
+            flex-direction: column;
+            text-align: center;
+            background-color: black;
+            padding-top: 333px;
+        }
+        span {
+            /*
+                文字阴影：
+                text-shadow: 水平位移 垂直位移  模糊程度  阴影颜色;
+            */
+            font: 700 100px "Comic Sans MS";
+            color: white;
+            text-shadow: 0 0 20px #fdec84,
+            10px -10px 30px #ffae35,
+            20px -20px 40px #ec760c,
+            -20px -60px 50px #cd4607,
+            0px -80px 60px #973717,
+            10px -40px 70px #451b0e;
+        }
+        section {
+            margin-top: 300px;
+        }
+
+    </style>
+</head>
+<body>
+<div class="title">
+    <span>
+        Hello Fdxans!
+    </span>
+
+
+    <section>
+        <div style="width:300px;margin:0 auto; padding:20px 0;">
+            <div style="display:inline-block;text-decoration:none;height:20px;line-height:20px;"><p style="float:left;height:20px;line-height:20px;margin: 0px 0px 0px 5px; color:#939393;">工信部备案号：陇ICP备17002023号</p>
+            </div>
+        </div>
+        <div style="width:300px;margin:0 auto; padding:20px 0;">
+            <a target="_blank" href="http://www.beian.gov.cn/portal/registerSystemInfo?recordcode=33011002015666" style="display:inline-block;text-decoration:none;height:20px;line-height:20px;"><img src="./gov.png" style="float:left;"/><p style="float:left;height:20px;line-height:20px;margin: 0px 0px 0px 5px; color:#939393;">浙公网安备 33011002015666号</p></a>
+        </div>
+    </section>
+</div>
+</body>
+</html>

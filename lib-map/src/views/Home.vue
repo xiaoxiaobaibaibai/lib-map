@@ -1,8 +1,9 @@
 <template>
   <div class="home">
-    <a-button @click="handleClick">企业地图</a-button>
-    <a-button @click="handleClickCity">城市列表</a-button>
-    <a-button @click="handleClickSearch">城市搜索</a-button>
+    <a-button @click="handleClick('/map')">企业地图</a-button>
+    <a-button @click="handleClick('/city')">城市列表</a-button>
+    <a-button @click="handleClick('/search')">城市搜索</a-button>
+    <a-button @click="handleClick('/drawer')">筛选数据</a-button>
   </div>
 </template>
 
@@ -14,14 +15,8 @@ export default {
   components: {
   },
   methods: {
-    handleClick () {
-      this.$router.push('/map')
-    },
-    handleClickCity() {
-      this.$router.push('/city')
-    },
-    handleClickSearch() {
-      this.$router.push('/search')
+    handleClick (path) {
+      this.$router.push(path)
     }
   }
 }

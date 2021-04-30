@@ -27,6 +27,7 @@ export default {
       centerPoint: null, // 中心点
       label: null,
       polyline: null,
+      configOption: []
     }
   },
   components: {
@@ -71,12 +72,12 @@ export default {
       },
       init() {
         debugger
-        var point = new BMap.Point(116.404, 39.915);
+        var point = new BMap.Point(120.306595, 30.42474);
         this.map = new window.BMap.Map("map"); // 创建Map实例(鼠标右键控制倾斜角度)
         this.map.centerAndZoom(point, 15); // 初始化地图,设置中心点坐标和地图级别
         this.map.enableScrollWheelZoom(true); // 开启鼠标滚轮缩放
         this.map.enableDragging()
-        this.getLocation()
+        // this.getLocation()
         this.map.setMapStyleV2({
           styleJson: style
          // styleId: 'baab47c6fa5dcdcbea17611febadf609'
@@ -197,190 +198,192 @@ export default {
         });
         this.map.addOverlay(label)
   },
-    handleFocusMarker() {
-        const level = this.map.getZoom()
-        const center = this.map.getCenter()
-        const url = 'xxx'
-        const data = {
-          level,
-          center
-        }
-        this.$getAxios(url, data, res => this.renderFocusMarker(res))
-    },
-    /**
-     * 强搜
-     * 渲染标记和标签
-     * @param lng,lat 省市的地位坐标
-     * @param map map地图对象
-     * @param level 地图级别 1：省级 2：市级 3：区县级
-     * @param data json数据
-     * @param markerClickCallback 标记点击事件方法回调函数
-     * @param center 中心坐标
-     */
-    renderFocusMarker(lng, lat, level, data, markerClickCallback, center, isClick) {
-      // 1，将地图中心点定位到省市，格式化缩放级别
-      const point = new BMap.Point(lng, lat)
-      this.map.panTo(point)
-      for (let i = 0; i < data.length; i ++) {
-        let label
-        let d = data[i]
-        let opts = {
-          position: d.points[0], // 指定文本标注所在的地理位置
-          // offset:size
-        };
-        const labelContent = d.num;
-        label = new BMap.Label(labelContent, opts)
-        label.setStyle({
-          color: "white",
-          fontSize: "4px",
-          height: "auto",
-          lineHeight: "6px",
-          fontFamily: "微软雅黑",
-          backgroundColor: 'none',
-          maxWidth: 'none',
-          border: 'none',
-          'font-weight':'bold'
-        });
-
-      }
-
-    },
-    handleFocusMarher() {},
-
-    /**
-     * 画圆
-     */
-    draw(event) {
-      debugger
-      this.centerPoint = null; // 中心点
-      this.label = null;
-      this.polyline = null;
-      var arr = document.getElementsByClassName("bmap-btn");
-      for (var i = 0; i < arr.length; i++) {
-        arr[i].style.backgroundPositionY = "0";
-      }
-      event.target.style.backgroundPositionY = "-52px";
-      switch (event.target.id) {
-        case "marker": {
-          var drawingType = BMAP_DRAWING_MARKER;
-          break;
-        }
-        case "polyline": {
-          var drawingType = BMAP_DRAWING_POLYLINE;
-          break;
-        }
-        case "rectangle": {
-          var drawingType = BMAP_DRAWING_RECTANGLE;
-          break;
-        }
-        case "polygon": {
-          var drawingType = BMAP_DRAWING_POLYGON;
-          break;
-        }
-        case "circle": {
-          var drawingType = BMAP_DRAWING_CIRCLE;
-          break;
-        }
-      }
-      // 进行绘制
-      if (
-        this.drawingManager._isOpen &&
-        this.drawingManager.getDrawingMode() === drawingType
-      ) {
-        this.drawingManager.close();
-      } else {
-        this.drawingManager.setDrawingMode(drawingType);
-        this.drawingManager.open();
-      }
-    },
-
-    overlaycomplete(event) {
-      console.log("完成绘制：------> ", event)
-      console.log(this.centerPoint);
-      console.log(this.label);
-      console.log(this.polyline);
-      this.centerPoint = null; // 中心点
-      this.label = null;
-      this.polyline = null;
-    },
-
-    showCirle(event) {
-      // 如果中心点是null
-      if (this.centerPoint == null) {
-        this.centerPoint = event.point; // 给中心点设置新的值
-        this.drawingManager._mask.addEventListener("mousemove", this.showRadis);
-        // var maker = new window.BMapGL.Marker(event.point);
-        // this.map.addOverlay(maker);
-      }
-    },
-
-    /**
-     * 半径
-     */
-    showRadis(event) {
-      var radius = this.drawingManager._map.getDistance(
-        this.centerPoint,
-        event.point
-      );
-      if (!isNaN(radius)) {
-        this.map.removeOverlay(this.label); //清除上一个显示半径的label标注
-        this.map.removeOverlay(this.polyline); //清除上一个圆的半径直线
-        //添加文字标签
-        var opts = {
-          position: event.point, // 指定文本标注所在的地理位置（当前鼠标的位置）
-          offset: new window.BMap.Size(5, -15) //设置文本偏移量
-        };
-        this.label = new window.BMap.Label(
-          (radius / 1000).toFixed(2) + "公里",
-          opts
-        ); // 创建文本标注对象
-        //文本标注样式
-        this.label.setStyle({
-          color: "#438eff",
-          //fontSize:'14px',
-          fontWeight: "bold",
-          border: "0px solid #ccc",
-          backgroundColor: "" //#2267AD
-        });
-        //从圆心画半径
-        this.polyline = new window.BMap.Polyline(
-          [this.centerPoint, event.point],
-          {
-            strokeColor: "red",
-            strokeWeight: 2,
-            strokeOpacity: 0.5
+      handleFocusMarker() {
+          const level = this.map.getZoom()
+          const center = this.map.getCenter()
+          const url = 'xxx'
+          const data = {
+            level,
+            center
           }
-        ); //后面参数为划线的样式
-        this.map.addOverlay(this.polyline); //添加半径直线
-        this.map.addOverlay(this.label); //添加label
-      }
-    },
+          this.$getAxios(url, data, res => this.renderFocusMarker(res))
+      },
+      /**
+       * 强搜
+       * 渲染标记和标签
+       * @param lng,lat 省市的地位坐标
+       * @param map map地图对象
+       * @param level 地图级别 1：省级 2：市级 3：区县级
+       * @param data json数据
+       * @param markerClickCallback 标记点击事件方法回调函数
+       * @param center 中心坐标
+       */
+      renderFocusMarker(lng, lat, level, data, markerClickCallback, center, isClick) {
+        // 1，将地图中心点定位到省市，格式化缩放级别
+        const point = new BMap.Point(lng, lat)
+        this.map.panTo(point)
+        for (let i = 0; i < data.length; i ++) {
+          let label
+          let d = data[i]
+          let opts = {
+            position: d.points[0], // 指定文本标注所在的地理位置
+            // offset:size
+          };
+          const labelContent = d.num;
+          label = new BMap.Label(labelContent, opts)
+          label.setStyle({
+            color: "white",
+            fontSize: "4px",
+            height: "auto",
+            lineHeight: "6px",
+            fontFamily: "微软雅黑",
+            backgroundColor: 'none',
+            maxWidth: 'none',
+            border: 'none',
+            'font-weight':'bold'
+          });
 
-    mapCenter(str) {
-      this.getPointByAddress(str)
-      this.map.centerAndZoom(str)
-    },
+        }
+
+      },
+      handleFocusMarher() {},
 
       /**
-       * baidu服务 地址转坐标
+       * 画圆
        */
-    getPointByAddress(address, ak = 'fw9CfWuMOO6cfrERuEFKL4FOIUGQQ3dj') {
+      draw(event) {
+        debugger
+        this.centerPoint = null; // 中心点
+        this.label = null;
+        this.polyline = null;
+        var arr = document.getElementsByClassName("bmap-btn");
+        for (var i = 0; i < arr.length; i++) {
+          arr[i].style.backgroundPositionY = "0";
+        }
+        event.target.style.backgroundPositionY = "-52px";
+        switch (event.target.id) {
+          case "marker": {
+            var drawingType = BMAP_DRAWING_MARKER;
+            break;
+          }
+          case "polyline": {
+            var drawingType = BMAP_DRAWING_POLYLINE;
+            break;
+          }
+          case "rectangle": {
+            var drawingType = BMAP_DRAWING_RECTANGLE;
+            break;
+          }
+          case "polygon": {
+            var drawingType = BMAP_DRAWING_POLYGON;
+            break;
+          }
+          case "circle": {
+            var drawingType = BMAP_DRAWING_CIRCLE;
+            break;
+          }
+        }
+        // 进行绘制
+        if (
+          this.drawingManager._isOpen &&
+          this.drawingManager.getDrawingMode() === drawingType
+        ) {
+          this.drawingManager.close();
+        } else {
+          this.drawingManager.setDrawingMode(drawingType);
+          this.drawingManager.open();
+        }
+      },
 
-      const url = `http://api.map.baidu.com/geocoding/v3/`
-      const data = {
-        ak,
-        address
-      }
+      overlaycomplete(event) {
+        console.log("完成绘制：------> ", event)
+        console.log(this.centerPoint);
+        console.log(this.label);
+        console.log(this.polyline);
+        this.centerPoint = null; // 中心点
+        this.label = null;
+        this.polyline = null;
+      },
 
-      this.$getAxios(url,data,res => this.handlePointByAddress(res))
-    },
-    handlePointByAddress(res) {
-      //{"status":0,"result":{"location":{"lng":116.3084202915042,"lat":40.05703033345938},"precise":1,"confidence":80,"comprehension":100,"level":"门址"}}
-      if(res.status == 0) {
-        console.log('location',res.result.location)
-        return res.result.location
-      }
-    }
+      showCirle(event) {
+        // 如果中心点是null
+        if (this.centerPoint == null) {
+          this.centerPoint = event.point; // 给中心点设置新的值
+          this.drawingManager._mask.addEventListener("mousemove", this.showRadis);
+          // var maker = new window.BMapGL.Marker(event.point);
+          // this.map.addOverlay(maker);
+        }
+      },
+
+      /**
+       * 半径
+       */
+      showRadis(event) {
+        var radius = this.drawingManager._map.getDistance(
+          this.centerPoint,
+          event.point
+        );
+        if (!isNaN(radius)) {
+          this.map.removeOverlay(this.label); //清除上一个显示半径的label标注
+          this.map.removeOverlay(this.polyline); //清除上一个圆的半径直线
+          //添加文字标签
+          var opts = {
+            position: event.point, // 指定文本标注所在的地理位置（当前鼠标的位置）
+            offset: new window.BMap.Size(5, -15) //设置文本偏移量
+          };
+          this.label = new window.BMap.Label(
+            (radius / 1000).toFixed(2) + "公里",
+            opts
+          ); // 创建文本标注对象
+          //文本标注样式
+          this.label.setStyle({
+            color: "#438eff",
+            //fontSize:'14px',
+            fontWeight: "bold",
+            border: "0px solid #ccc",
+            backgroundColor: "" //#2267AD
+          });
+          //从圆心画半径
+          this.polyline = new window.BMap.Polyline(
+            [this.centerPoint, event.point],
+            {
+              strokeColor: "red",
+              strokeWeight: 2,
+              strokeOpacity: 0.5
+            }
+          ); //后面参数为划线的样式
+          this.map.addOverlay(this.polyline); //添加半径直线
+          this.map.addOverlay(this.label); //添加label
+        }
+      },
+
+      mapCenter(str) {
+        this.getPointByAddress(str)
+        this.map.centerAndZoom(str)
+      },
+
+        /**
+         * baidu服务 地址转坐标
+         */
+      getPointByAddress(address, ak = 'fw9CfWuMOO6cfrERuEFKL4FOIUGQQ3dj') {
+
+        const url = `http://api.map.baidu.com/geocoding/v3/`
+        const data = {
+          ak,
+          address
+        }
+
+        this.$getAxios(url,data,res => this.handlePointByAddress(res))
+      },
+      handlePointByAddress(res) {
+        //{"status":0,"result":{"location":{"lng":116.3084202915042,"lat":40.05703033345938},"precise":1,"confidence":80,"comprehension":100,"level":"门址"}}
+        if(res.status == 0) {
+          console.log('location',res.result.location)
+          return res.result.location
+        }
+      },
+
+
     },
   created() {
   },

@@ -184,12 +184,12 @@ export default {
 };
 </script>
 
-<style>
+<style scoped>
 body,
 html,
 #container {
   width: 100%;
-  height: 500px;
+  /*height: 500px;*/
   margin: 0;
   font-family: "微软雅黑";
 }

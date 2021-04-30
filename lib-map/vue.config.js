@@ -23,5 +23,9 @@ module.exports = {
         target: 'https://api.map.baidu.com/geocoding/v3/'
       }
     }
-  }
+  },
+  transpileDependencies: [
+    'vue-echarts',
+    'resize-detector'
+  ]
 }
