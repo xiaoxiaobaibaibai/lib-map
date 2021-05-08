@@ -1151,6 +1151,7 @@ var BMAP_DRAWING_MARKER    = "marker",     // 鼠标画点模式
          */
 
         var startAction = function (e) {
+          console.log('鼠标画圆功能e,me =====',e,me)
             if (me.controlButton == 'right' && (e.button == 1 || e.button == 0)) {
                 return;
             }
@@ -1338,6 +1339,66 @@ var BMAP_DRAWING_MARKER    = "marker",     // 鼠标画点模式
         mask.addEventListener('mousedown', mousedownAction);
         mask.addEventListener('mousemove', mousemoveAction);
     };
+
+    /**
+     * 自动设置画圆的事件
+     * point {point}中心点,必传
+     * radius {number} 半径,可传,默认3km
+     */
+    DrawingManager.prototype._setCircle = function (point,  radius = 3) {
+      var me = this,
+        map = this._map,
+        mask = this._mask,
+        circle = null,
+        overlays = [],
+        centerPoint = null; // 圆的中心点
+
+      var radius = null;
+      var moveMarker = null;
+      var polyline = null;
+      var radiusWindow = null;
+      var operateWindow = null;
+
+      var lineStyel = {
+        strokeColor: '#4E6DF1', // 边线颜色。
+        strokeWeight: 2 // 边线的宽度，以像素为单位。
+      };
+
+      var centerIcon = new BMap.Icon('./circenter.svg', new BMap.Size(20, 20));
+      var shadow = new BMap.Icon('./maker-shadow.png', new BMap.Size(21, 33));
+
+      /**
+       * 开始绘制圆形
+       */
+
+      var startAction = function (e) {
+        console.log('鼠标画圆功能e,me =====',e,me)
+
+        centerPoint = e.point;
+
+        var centerMarker = new BMap.Marker(centerPoint);
+        centerIcon.setImageSize(new BMap.Size(20, 20));
+        centerMarker.setIcon(centerIcon);
+        centerMarker.setShadow(shadow);
+        centerMarker.enableDragging();
+        centerMarker.addEventListener('dragstart', centerDragstart);
+        centerMarker.addEventListener('dragging', centerDragging);
+        centerMarker.addEventListener('dragend', centerDragend);
+        map.addOverlay(centerMarker);
+
+        overlays.push(centerMarker);
+
+        circle = new BMap.Circle(centerPoint, 0, me.circleOptions);
+        map.addOverlay(circle);
+        mask.enableEdgeMove();
+        mask.addEventListener('mousemove', moveAction);
+        baidu.on(document, 'mouseup', endAction);
+      };
+
+
+    };
+
+
 
     /**
      * 画线和画多边形相似性比较大，公用一个方法
