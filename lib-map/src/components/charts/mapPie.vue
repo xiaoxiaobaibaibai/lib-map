@@ -5,38 +5,37 @@
 
 <script>
 
-const data = [
-  {value: 1048, name: '搜索引擎'},
-  {value: 735, name: '直接访问'},
-  {value: 580, name: '邮件营销'},
-  {value: 484, name: '联盟广告'},
-  {value: 300, name: '视频广告'}
-]
-
 export default {
   name: "mapPie",
   props: {
-    chartData: Array
+    chartData: Object
   },
   data() {
     return {
       option: {},
-      data: this.chartData
-      // data: [
-      //   {value: 1048, name: '搜索引擎'},
-      //   {value: 735, name: '直接访问'},
-      //   {value: 580, name: '邮件营销'},
-      //   {value: 484, name: '联盟广告'},
-      //   {value: 300, name: '视频广告'}
-      // ]
+      // data: this.chartData
+      data: [
+        {value: 1048, name: '搜索引擎'},
+        {value: 735, name: '直接访问'},
+        {value: 580, name: '邮件营销'},
+        {value: 484, name: '联盟广告'},
+        {value: 300, name: '视频广告'}
+      ]
     }
   },
   components: {
   },
   watch: {
-    chartData: function (newVal) {
-      this.handleShow()
-      this.$refs.chart.mergeOptions(this.option)
+
+    chartData: {
+      handler: function (newVal) {
+        this.handleShow()
+        console.log('newVal',newVal)
+        this.$refs.chart && this.$refs.chart.mergeOptions(this.option,true)
+      },
+      //页面初始化时立即调用
+      immediate: true,
+      deep: true
     }
   },
   methods: {
@@ -105,7 +104,7 @@ export default {
             labelLine: {
               show: false
             },
-            data: this.chartData
+            data: this.chartData.data
           }
         ]
       }

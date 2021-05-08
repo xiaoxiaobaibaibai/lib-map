@@ -1,35 +1,41 @@
 <template>
-  <div class="fix-body">
-    <div class="search-input" ref="moreUl" :class="{'more': this.moreUlVisible}">
-      <a-input
-        type="text"
-        maxlength="150"
-        v-model="inputValue"
-        @click.stop="searchClick"
-        @input="searchInput"
-        @focus="inputFocus"
-        :placeholder="placeholderText"
-        @keyup="searchKey"
-        allow-clear
-        :class="{focus: moreUlVisible}"
-      />
-      <ul class="moreUl" v-if="moreUlVisible">
-        <li v-for="(item,index) in moreUlData" :class="{'active': index == moreUlSelect}">
-          <span class="moreUl-name" v-html="item.name"></span>
-          <span class="moreUl-type" :class="{'type-address': item.type == '地址'}">{{item.type}}</span>
-          <span class="moreUl-address">{{item.address}}</span>
-        </li>
-        <li v-if="empty" class="empty">未找到相关地点，请输入精确名称再次搜索</li>
-      </ul>
+  <div>
+    <div class="fix-body">
+      <div class="search-input" ref="moreUl" :class="{'more': this.moreUlVisible}">
+        <a-input
+          type="text"
+          maxlength="150"
+          v-model="inputValue"
+          @click.stop="searchClick"
+          @input="searchInput"
+          @focus="inputFocus"
+          :placeholder="placeholderText"
+          @keyup="searchKey"
+          allow-clear
+          :class="{focus: moreUlVisible}"
+        />
+
+        <ul class="moreUl" v-if="moreUlVisible">
+          <li v-for="(item,index) in moreUlData" :class="{'active': index == moreUlSelect}">
+            <span class="moreUl-name" v-html="item.name"></span>
+            <span class="moreUl-type" :class="{'type-address': item.type == '地址'}">{{item.type}}</span>
+            <span class="moreUl-address">{{item.address}}</span>
+          </li>
+          <li v-if="empty" class="empty">未找到相关地点，请输入精确名称再次搜索</li>
+        </ul>
+      </div>
+      <span class="search-btn">
+      <a-icon type="search" :style="{color: '#fff'}"></a-icon>
+      </span>
     </div>
-    <span class="search-btn">
-    <a-icon type="search" :style="{color: '#fff'}"></a-icon>
-  </span>
+
   </div>
 
 </template>
 
 <script>
+import tip from "@/components/lib-map/tip";
+
 export default {
   name: "searchWrap",
   data() {
@@ -94,6 +100,10 @@ export default {
       empty: false
     }
   },
+  components: {
+    tip
+  },
+
   methods: {
     searchClick() {},
     searchInput() {
@@ -107,7 +117,7 @@ export default {
       this.moreUlVisible = true
     },
     searchKey(e) {
-      debugger
+
       console.log(e)
       const keyCode = e.code
       if (keyCode === 'ArrowDown') {
@@ -130,7 +140,7 @@ export default {
 
        }
       }else if(keyCode === 'Enter') {
-        this.$emit('focus')
+        this.handleEnter()
       }
      },
     inputBlur() {
@@ -140,6 +150,10 @@ export default {
       if(res.code == 1) {
         this.moreUlData = res.data
       }
+    },
+    handleEnter() {
+      this.moreUlVisible = false
+      this.$emit('focus',this.inputValue)
     }
   },
   mounted() {

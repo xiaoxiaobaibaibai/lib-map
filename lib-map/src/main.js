@@ -3,7 +3,7 @@ import App from './App.vue'
 import router from './router'
 import store from './store'
 import axios from 'axios'
-import {Icon,Button, Select, Carousel, Tooltip, Skeleton } from 'ant-design-vue'
+import {Icon,Button,Input, Select, Carousel, Tooltip, Skeleton, Pagination } from 'ant-design-vue'
 import {Cascader} from 'element-ui'
 import customStyle from './assets/customStyle.less'
 import 'echarts/lib/chart/pie'
@@ -26,16 +26,18 @@ Vue.config.productionTip = false
 
 Vue.use(Icon)
 Vue.use(Button)
+Vue.use(Input)
 Vue.use(Select)
 Vue.use(Cascader,{ size: 'small', zIndex: 3000 })
 Vue.use(Carousel)
 Vue.use(Tooltip)
 Vue.use(Skeleton)
+Vue.use(Pagination)
 
 Vue.prototype.$getAxios = (url, data, cb, errCb = (err) => {
   console.log(err)
 }) => {
-  axios.get(url,{
+  return  axios.get(url,{
     params: data
   }).then(res => cb(res.data)).catch(err => errCb(err))
 }

@@ -1,160 +1,176 @@
 <template>
-  <div class="drawer">
-    <section class="title">
-      <span class="center">[中心点]</span>
-      <span class="center-text">浙江核新同花顺网络信息有限公司</span>
-      <span class="info-title">范围</span>
-      <span class="info-content">3km</span>
-      <span class="info-title">企业数量</span>
-      <span class="info-content">124家</span>
-    </section>
-    <section class="filter" v-if="!skeleton">
-      <div class="filter-title">
-        <span>条件筛选</span>
-      </div>
-      <div class="filter-select" v-if="isSelectEmpty">
-        <section>
-          <span class="filter-select-title">已选范围</span>
-        </section>
-        <section>
-          <a-tooltip v-for="item in select" :key="item.symbol">
-          <template slot="title">
-            {{ item.name }}： {{ item.label }}
-          </template>
-            <span class="filter-select-info"><span>{{ item.name }}： {{ item.label }}</span><a-icon @click="handleClose(item)" type="close"/></span>
-          </a-tooltip>
-
-          <span class="filter-select-operate" @click="removeAllSelect">清空条件</span>
-        </section>
-      </div>
-    </section>
-    <a-skeleton active :loading="skeleton" active avatar/>
-
-    <section class="select" v-if="!skeleton">
-      <div class="select-content" :style="styleObject" ref="select-content">
-        <div v-for="item in configOption" class="select-content-item" :placeholder="item.name" :key="item.symbol">
-<!--          <a-cascader-->
-<!--            :options="item.children"-->
-<!--            :display-render="displayRender"-->
-<!--            change-on-select-->
-<!--            expand-trigger="hover"-->
-<!--            popupClassName="cascader-pop"-->
-<!--            style="width: 96px"-->
-<!--          />-->
-
-          <el-cascader
-            :placeholder="item.name"
-            @change="value => onChange(value, item)"
-            style="width: 96px"
-            :options="item.children"
-            v-if="item.symbol =='industry'"
-            :props="props"
-            clearable
-            filterable
-            v-model="selectOption[item.symbol]"
-            :size="'small'"
-            collapse-tags
-          >
-
-          </el-cascader>
-
-          <a-select
-            v-if="item.symbol !='industry' && !item.select"
-            v-model="selectOption[item.symbol]"
-            :size="'small'"
-            :placeholder="item.name"
-            style="width: 96px"
-            allowClear
-            labelInValue
-            @change="value => onChange(value, item)"
-            mode="multiple"
-          >
-            <a-select-option
-              v-for="el in item.children"
-              :key="el.value"
-            >
-              {{el.label}}
-            </a-select-option>
-          </a-select>
-
-          <a-select
-            v-if="item.symbol !='industry' && item.select"
-            v-model="selectOption[item.symbol]"
-            :size="'small'"
-            :placeholder="item.name"
-            style="width: 96px"
-            allowClear
-            labelInValue
-            @change="value => onChange(value, item)"
-          >
-            <a-select-option
-              v-for="el in item.children"
-              :key="el.value"
-            >
-              {{el.label}}
-            </a-select-option>
-          </a-select>
-
+  <div class="drawer-container">
+    <span class="control-btn" :class="{'open': drawerVisible}" @click="handleCloseDrawer"></span>
+    <div class="drawer" v-show="drawerVisible">
+      <section class="title">
+        <span class="center">[中心点]</span>
+        <span class="center-text">浙江核新同花顺网络信息有限公司</span>
+        <span class="info-title">范围</span>
+        <span class="info-content">3km</span>
+        <span class="info-title">企业数量</span>
+        <span class="info-content">124家</span>
+      </section>
+      <section class="filter" v-if="!skeleton">
+        <div class="filter-title">
+          <span>条件筛选</span>
         </div>
+        <div class="filter-select" v-if="isSelectEmpty">
+          <section>
+            <span class="filter-select-title">已选范围</span>
+          </section>
+          <section>
+            <a-tooltip v-for="item in select" :key="item.symbol">
+              <template slot="title">
+                {{ item.name }}： {{ item.label }}
+              </template>
+              <span class="filter-select-info"><span>{{ item.name }}： {{ item.label }}</span><a-icon @click="handleClose(item)" type="close"/></span>
+            </a-tooltip>
 
-
-      </div>
-      <span @click="handleSelectOperate" class="select-operate">
-      {{isExpand ?  '更多筛选' : '收起筛选'}}
-    </span>
-    </section>
-    <a-skeleton active :loading="skeleton" active avatar/>
-
-    <section class="swiper" v-if="!skeleton">
-      <a-carousel arrows>
-        <div
-          slot="prevArrow"
-          slot-scope="props"
-          class="custom-slick-arrow"
-          style="left: 10px;zIndex: 1"
-        >
-          <span class="pre"></span>
-        </div>
-        <div slot="nextArrow" slot-scope="props" class="custom-slick-arrow" style="right: 10px">
-          <span class="next"></span>
-        </div>
-        <div v-for="item in listTemp">
-          <section class="chart-content">
-            <div class="chart-item" v-for="el in item">
-              <map-pie :chart-data="el.data"></map-pie>
-            </div>
+            <span class="filter-select-operate" @click="removeAllSelect">清空条件</span>
           </section>
         </div>
-      </a-carousel>
-    </section>
-    <a-skeleton active :loading="skeleton" active avatar/>
+      </section>
+      <a-skeleton active :loading="skeleton" active avatar/>
 
-    <section class="list" v-if="!skeleton">
-      <div class="list-item" v-for="item in companyList">
-        <header>
-          <span class="log"></span>
-          <span class="state">{{item.state}}</span>
-          <span class="name">{{item.company_name}}</span>
-          <a-button :size="'small'" class="operate"><i type="search"></i>搜索周边</a-button>
-        </header>
-        <p>
-          <span class="title">法人</span>
-          <span class="info active">{{item.legal_person}}</span>
-          <span class="title">注册资本</span>
-          <span class="info">{{item.captial}}</span>
-          <span class="title">成立日期</span>
-          <span class="info">{{item.establish_time}}</span>
-          <span class="title">行业</span>
-          <span class="info">{{item.small_industry}}</span>
-        </p>
-        <p>
-          <span class="title">地址</span>
-          <span class="address">{{item.address}}</span>
-        </p>
-      </div>
-    </section>
-    <a-skeleton active :loading="skeleton" active avatar/>
+      <section class="select" v-if="!skeleton">
+        <div class="select-content" :style="styleObject" ref="select-content">
+          <div v-for="item in configOption" class="select-content-item" :placeholder="item.name" :key="item.symbol">
+            <!--          <a-cascader-->
+            <!--            :options="item.children"-->
+            <!--            :display-render="displayRender"-->
+            <!--            change-on-select-->
+            <!--            expand-trigger="hover"-->
+            <!--            popupClassName="cascader-pop"-->
+            <!--            style="width: 96px"-->
+            <!--          />-->
 
+            <el-cascader
+              :placeholder="item.name"
+              @change="value => onChange(value, item)"
+              style="width: 96px"
+              :options="item.children"
+              v-if="item.symbol =='industry'"
+              :props="props"
+              clearable
+              v-model="selectOption[item.symbol]"
+              :size="'mini'"
+              collapse-tags
+            >
+
+            </el-cascader>
+
+            <a-select
+              v-if="item.symbol !='industry' && !item.select"
+              v-model="selectOption[item.symbol]"
+              :size="'small'"
+              :placeholder="item.name"
+              style="width: 96px"
+              allowClear
+              :maxTagCount=1
+              labelInValue
+              @change="value => onChange(value, item)"
+              mode="multiple"
+            >
+              <a-select-option
+                v-for="el in item.children"
+                :key="el.value"
+              >
+                {{el.label}}
+              </a-select-option>
+            </a-select>
+
+            <a-select
+              v-if="item.symbol !='industry' && item.select"
+              v-model="selectOption[item.symbol]"
+              :size="'small'"
+              :placeholder="item.name"
+              style="width: 96px"
+              allowClear
+              labelInValue
+              @change="value => onChange(value, item)"
+            >
+              <a-select-option
+                v-for="el in item.children"
+                :key="el.value"
+              >
+                {{el.label}}
+              </a-select-option>
+            </a-select>
+
+          </div>
+
+
+        </div>
+        <span @click="handleSelectOperate" class="select-operate">
+      {{isExpand ?  '更多筛选' : '收起筛选'}}
+    </span>
+      </section>
+      <a-skeleton active :loading="skeleton" active avatar/>
+
+      <section class="swiper" v-if="!skeleton">
+        <a-carousel arrows>
+          <div
+            slot="prevArrow"
+            slot-scope="props"
+            class="custom-slick-arrow"
+            style="left: 10px;zIndex: 1"
+          >
+            <span class="pre"></span>
+          </div>
+          <div slot="nextArrow" slot-scope="props" class="custom-slick-arrow" style="right: 10px">
+            <span class="next"></span>
+          </div>
+          <div v-for="item in listTemp">
+            <section class="chart-content">
+              <div class="chart-item" v-for="el in item">
+                <map-pie :chart-data="el"></map-pie>
+              </div>
+            </section>
+          </div>
+        </a-carousel>
+      </section>
+      <a-skeleton active :loading="skeleton" active avatar/>
+
+      <section class="list" v-if="!skeleton">
+        <div class="list-item" v-for="(item, index) in companyList">
+          <header>
+            <span class="log" v-if="index == 0"></span>
+            <span class="state">{{item.state}}</span>
+            <span class="name">{{item.company_name}}</span>
+            <a-button :size="'small'" class="operate"><i type="search"></i>搜索周边</a-button>
+          </header>
+          <p>
+            <span class="title">法人</span>
+            <span class="info active">{{item.legal_person}}</span>
+            <span class="title">注册资本</span>
+            <span class="info">{{item.captial}}</span>
+            <span class="title">成立日期</span>
+            <span class="info">{{item.establish_time}}</span>
+            <span class="title">行业</span>
+            <span class="info">{{item.small_industry}}</span>
+          </p>
+          <p>
+            <span class="title">地址</span>
+            <span class="address">{{item.address}}</span>
+          </p>
+        </div>
+        <div class="pagination">
+          <a-pagination
+            v-model="pagination.current"
+            :total="pagination.total"
+            :show-total="(total) => `共${total}条`"
+            :size="'small'"
+            show-size-changer
+            show-quick-jumper
+          >
+          </a-pagination>
+        </div>
+
+      </section>
+      <a-skeleton active :loading="skeleton" active avatar/>
+
+
+    </div>
   </div>
 </template>
 
@@ -174,35 +190,43 @@ export default {
       companyList: [],
       chartList: [
         {
+          data:[],
           name:'二级行业统计TOP5',
           value:'small_industry'
         },
         {
+          data:[],
           name:'上市状态统计',
           value:'listed_state'
         },
         {
+          data:[],
           name:'融资进程统计',
           value:'financing_rounds'
         },
         {
+          data:[],
           name:'注册资本区间统计',
           value:'capital'
         },
         {
+          data:[],
           name:'公司人数区间统计',
           value:'staff_num'
         },
         {
+          data:[],
           name:'经营状态统计',
           value:'state'
         },
         {
+          data:[],
           name:'企业类型统计',
           value:'type'
         },
         {
-          name:'年份区间统',
+          data:[],
+          name:'年份区间统计',
           value:'establish_time'
         },
       ],
@@ -213,6 +237,12 @@ export default {
         multiple: true,
         checkStrictly: true,
         expandTrigger: 'hover'
+      },
+      drawerVisible: true,
+      pagination: {
+        current: 1,
+        total: 0,
+        pageSize: 10,
       }
     }
   },
@@ -244,9 +274,7 @@ export default {
     mapPie
   },
   created() {
-    this.getData().then(
-      this.skeleton = false
-    )
+    this.getData()
   },
   methods: {
     //antdv 悬浮自动展开
@@ -257,10 +285,11 @@ export default {
     async getData () {
       await this.getCompanyConfig()
       await console.log('chartList',this.chartList)
-      await this.chartList.forEach(item => {
-        this.getChartData(item)
-      })
       await this.getCompanyList()
+      const taskTemp = this.chartList.map(item => this.getChartData(item))
+      await Promise.all(taskTemp).then(result => {
+        this.skeleton = false
+      })
     },
 
     handleSelectOperate() {
@@ -332,7 +361,7 @@ export default {
       const data = {
         searchType: 'map'
       }
-      this.$getAxios(url,data, res=>{
+     return this.$getAxios(url,data, res=>{
         if(res.code == 1) {
           this.configOption = res.data
           console.log(res.data)
@@ -342,17 +371,13 @@ export default {
         }
       })
     },
-    //并发请求 图表
-    conGetChart() {
-      this.chartList.forEach(item => this.getItem(item))
-    },
     getChartData(item) {
       // standardgwapi/api/standardgwapi/api/company_library/map/chart
       const url = 'http://software.myhexin.com/yapi/mock/2486/standardgwapi/api/standardgwapi/api/company_library/map/chart'
       const data = {
         aggfield: item.value
       }
-      this.$getAxios(url, data, res => {
+     return this.$getAxios(url, data, res => {
         if(res.code == 1) {
           item.data = res.data.items
         }
@@ -365,7 +390,7 @@ export default {
         searchType: 'map'
       }
 
-      this.$getAxios(url, data, res => {
+     return  this.$getAxios(url, data, res => {
         if(res.code == 1) {
           this.companyList = res.data.items
           this.backNum ++
@@ -392,6 +417,10 @@ export default {
         }
         this.selectOption[item.symbol] = undefined
       })
+    },
+
+    handleCloseDrawer() {
+      this.drawerVisible = !this.drawerVisible
     }
   }
 }
@@ -408,367 +437,417 @@ export default {
   padding-top: 40px;
 }
 
-.drawer {
-  margin-left: auto;
-  width: 732px;
+/deep/ .el-input__inner {
+  height: 24px;
+}
+
+.drawer-container {
   height: 100%;
-  background: #fff;
-
-  section.title {
-    display: flex;
-    align-items: center;
+  position: fixed;
+  top: 0px;
+  right: 0px;
+  z-index: 6;
+  display: flex;
+  justify-content: center;
+  display: flex;
+  align-items: center;
+  .control-btn {
+    margin-left: auto;
+    width: 10px;
     height: 48px;
-    margin-left: 16px;
-    border-bottom: 1px solid #ECECF7;
-
-    span {
-      &.center {
-        font-family: Lucida Grande;
-        font-size: 14px;
-        color: #474762;
-        line-height: 22px;
-      }
-
-      &.center-text {
-        margin-left: 8px;
-        font-family: Microsoft YaHei;
-        font-weight: bold;
-        font-size: 16px;
-        color: #272841;
-        line-height: 24px;
-      }
-
-      &.info-title {
-        margin-left: 12px;
-        font-family: Microsoft YaHei;
-        font-size: 12px;
-        color: #7D7D94;
-        line-height: 20px;
-      }
-
-      &.info-content {
-        font-family: Microsoft YaHei;
-        font-size: 12px;
-        color: #272841;
-        line-height: 20px;
+    background: url(~@/assets/map/side-expand-normal.png) no-repeat;
+    background-size: 10px 48px;
+    cursor: pointer;
+    &:hover {
+      background: url(~@/assets/map/side-expand-hover.png) no-repeat;
+      background-size: 10px 48px;
+    }
+    &.open {
+      background: url(~@/assets/map/side-close-normal.png) no-repeat;
+      background-size: 10px 48px;
+      &:hover {
+        background: url(~@/assets/map/side-close-hover.png) no-repeat;
+        background-size: 10px 48px;
       }
     }
   }
 
-  section.filter {
+  .drawer {
+    width: 732px;
+    height: 100%;
+    background: #fff;
     display: flex;
     flex-direction: column;
-    //height: 68px;
-    margin-left: 16px;
 
-    .filter-title {
-      height: 38px;
+    section.title {
       display: flex;
       align-items: center;
+      height: 48px;
+      margin-left: 16px;
+      border-bottom: 1px solid #ECECF7;
 
       span {
-        display: flex;
-        font-family: Microsoft YaHei;
-        margin-right: auto;
-        font-weight: bold;
-        font-size: 14px;
-        color: #474762;
-        line-height: 22px;
-      }
-    }
-
-    .filter-select {
-      display: flex;
-      align-items: center;
-      section:nth-child(1) {
-        width: 66px;
-      }
-
-      section:nth-child(2) {
-        width: 632px;
-        display: flex;
-        flex-wrap: wrap;
-        //line-height: 30px;
-        //align-content: space-between;
-      }
-
-      span {
-        &.filter-select-title {
-          font-family: MicrosoftY aHei;
+        &.center {
+          font-family: Lucida Grande;
           font-size: 14px;
-          color: #272841;
+          color: #474762;
           line-height: 22px;
         }
 
-        &.filter-select-info {
-          margin: 5px 0;
-          background: #E8EFFB;
-          padding: 0 8px;
-          border-radius: 2px;
+        &.center-text {
           margin-left: 8px;
-          font-family: 'Microsoft YaHei';
-          font-size: 14px;
-          color: #1B63D9;
-          text-align: center;
-          line-height: 22px;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          span {
-            display: inline-block;
-            max-width: 240px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-          }
-          i {
-            margin-left: 8px;
-            width: 12px;
-            height: 12px;
-          }
-        }
-
-        &.filter-select-operate {
           font-family: Microsoft YaHei;
-          font-size: 12px;
-          margin-left: 16px;
-          margin-bottom: 5px;
-          margin-top: 5px;
-          height: 22px;
-          color: #1B63D9;
-          line-height: 22px;
-          cursor: pointer;
+          font-weight: bold;
+          font-size: 16px;
+          color: #272841;
+          line-height: 24px;
         }
-      }
-    }
-  }
 
-  section.select {
-    height: auto;
-    display: flex;
-    margin-left: 16px;
-    flex-direction: column;
-
-    .select-content {
-      display: flex;
-      flex-wrap: wrap;
-      text-align: left;
-      line-height: 30px;
-      overflow: hidden;
-      .select-content-item {
-        width: 100px;
-
-        /deep/ .ant-cascader-menu {
-          &::-webkit-scrollbar {
-            width: 6px; /*高宽分别对应横竖滚动条的尺寸*/
-            height: 1px;
-          }
-          &::-webkit-scrollbar-thumb {
-            border-radius: 6px;
-            // -webkit-box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
-            background: rgba(144, 147, 153, 0.5);
-          }
-          &::-webkit-scrollbar-track {
-            // -webkit-box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
-            display: none;
-          }
-        }
-      }
-    }
-
-    .select-operate {
-      font-size: 12px;
-      color: #1B63D9;
-      cursor: pointer;
-    }
-
-    div.ant-select {
-      margin-right: 5px;
-    }
-  }
-
-  section.swiper {
-    padding: 0 16px;
-    height: 206px;
-    span.pre {
-      display: block;
-      width: 18px;
-      height: 34px;
-      background: url(~@/assets/map/pre.normol.svg);
-      &:hover {
-        background: url(~@/assets/map/pre.hover.svg);
-      }
-    }
-
-    span.next {
-      display: block;
-      width: 18px;
-      height: 34px;
-      float: right;
-      background: url(~@/assets/map/next.normol.svg);
-      &:hover {
-        background: url(~@/assets/map/next.hover.svg);
-      }
-    }
-
-    section.chart-content {
-      width: 700px;
-      height: 206px;
-      display: flex;
-      align-items: center;
-      //justify-content: space-between;
-      border: 1px solid #ECECF7;
-      .chart-item {
-        width: 209px;
-        height: 184px;
-        margin-right: 16px;
-      }
-    }
-
-    .ant-carousel /deep/ .slick-slide {
-      text-align: center;
-      height: 206px;
-      line-height: 206px;
-      //background: #364d79;
-      overflow: hidden;
-    }
-
-    .ant-carousel /deep/ .custom-slick-arrow {
-      width: 25px;
-      height: 25px;
-      font-size: 25px;
-      color: #fff;
-      opacity: 0.3;
-      &.slick-prev {
-        left: 0!important;
-      }
-      &.slick-next {
-        right: 0!important;
-      }
-    }
-    .ant-carousel /deep/ .custom-slick-arrow:before {
-      display: none;
-    }
-    .ant-carousel /deep/ .custom-slick-arrow:hover {
-      opacity: 0.5;
-    }
-
-    .ant-carousel /deep/ .slick-slide h3 {
-      color: #fff;
-    }
-
-    .ant-carousel /deep/ .slick-dots-bottom {
-      bottom: 0px;
-      li {
-        button {
-          width: 5px;
-          height: 4px;
-          border-radius: 2px;
-          background: #CBCBE1;
-        }
-        &.slick-active {
-          button {
-            background: #8F90B5;
-            width: 10px;
-            height: 4px;
-            border-radius: 2px;
-          }
-        }
-      }
-    }
-  }
-
-  section.list {
-    overflow-y: scroll;
-    height: 630px;
-    display: flex;
-    flex-direction: column;
-    padding: 0 16px;
-    &::-webkit-scrollbar {
-      width: 6px;
-    }
-    &::-webkit-scrollbar-track {
-      display: none;
-    }
-    /* 滚动条角落 */
-    &::-webkit-scrollbar-thumb {      /*滚动条的轨道*/
-      background-color: #B7B7C7;
-      border-radius: 4px;
-      &:hover {
-        background-color:#9293AA
-      }
-    }
-    .list-item {
-      padding-left: 13px;
-      display: flex;
-      flex-direction: column;
-      width: 700px;
-      height: 84px;
-      &:hover {
-        background: #EBF3FF;
-      }
-      header {
-        margin-top: 8px;
-        display: flex;
-        align-items: center;
-        .log {
-          width: 13px;
-          height: 16px;
-          background: url(~@/assets/map/center-hover.svg);
-          margin-right: 8px;
-        }
-        .state {
-          margin-right: 4px;
-          width: 32px;
-          height: 20px;
-          background: #E5F4F8;
-          border-radius: 2px;
-          font-family: Microsoft YaHei;
-          font-size: 12px;
-          color: #0095C2;
-          text-align: center;
-          line-height: 20px;
-        }
-        .name {
-          font-family: Microsoft YaHei;
-          font-size: 14px;
-          color: #1B63D9;
-          line-height: 22px;
-          margin-right: auto;
-        }
-      }
-      p {
-        margin-top: 4px;
-        margin-bottom: 0;
-        display: flex;
-        align-items: center;
-        .title {
-          margin-right: 4px;
+        &.info-title {
+          margin-left: 12px;
           font-family: Microsoft YaHei;
           font-size: 12px;
           color: #7D7D94;
           line-height: 20px;
         }
-        .info {
-          font-family: MicrosoftYaHei;
+
+        &.info-content {
+          font-family: Microsoft YaHei;
           font-size: 12px;
           color: #272841;
           line-height: 20px;
-          margin-right: 16px;
-          &.active {
+        }
+      }
+    }
+
+    section.filter {
+      display: flex;
+      flex-direction: column;
+      //height: 68px;
+      margin-left: 16px;
+
+      .filter-title {
+        height: 38px;
+        display: flex;
+        align-items: center;
+
+        span {
+          display: flex;
+          font-family: Microsoft YaHei;
+          margin-right: auto;
+          font-weight: bold;
+          font-size: 14px;
+          color: #474762;
+          line-height: 22px;
+        }
+      }
+
+      .filter-select {
+        display: flex;
+        align-items: center;
+        section:nth-child(1) {
+          width: 66px;
+        }
+
+        section:nth-child(2) {
+          width: 632px;
+          display: flex;
+          flex-wrap: wrap;
+          //line-height: 30px;
+          //align-content: space-between;
+        }
+
+        span {
+          &.filter-select-title {
+            font-family: MicrosoftY aHei;
+            font-size: 14px;
+            color: #272841;
+            line-height: 22px;
+          }
+
+          &.filter-select-info {
+            margin: 5px 0;
+            background: #E8EFFB;
+            padding: 0 8px;
+            border-radius: 2px;
+            margin-left: 8px;
+            font-family: 'Microsoft YaHei';
+            font-size: 14px;
             color: #1B63D9;
+            text-align: center;
+            line-height: 22px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            span {
+              display: inline-block;
+              max-width: 240px;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              white-space: nowrap;
+            }
+            i {
+              margin-left: 8px;
+              width: 12px;
+              height: 12px;
+            }
+          }
+
+          &.filter-select-operate {
+            font-family: Microsoft YaHei;
+            font-size: 12px;
+            margin-left: 16px;
+            margin-bottom: 5px;
+            margin-top: 5px;
+            height: 22px;
+            color: #1B63D9;
+            line-height: 22px;
+            cursor: pointer;
           }
         }
-        .address {
-          font-family: MicrosoftYaHei;
-          font-size: 12px;
-          color: #272841;
-          line-height: 20px;
+      }
+    }
+
+    section.select {
+      height: auto;
+      display: flex;
+      margin-left: 16px;
+      flex-direction: column;
+
+      .select-content {
+        display: flex;
+        flex-wrap: wrap;
+        text-align: left;
+        line-height: 32px;
+        overflow: hidden;
+        .select-content-item {
+          width: 100px;
+
+          /deep/ .ant-cascader-menu {
+            &::-webkit-scrollbar {
+              width: 6px; /*高宽分别对应横竖滚动条的尺寸*/
+              height: 1px;
+            }
+            &::-webkit-scrollbar-thumb {
+              border-radius: 6px;
+              // -webkit-box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+              background: rgba(144, 147, 153, 0.5);
+            }
+            &::-webkit-scrollbar-track {
+              // -webkit-box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+              display: none;
+            }
+          }
+        }
+      }
+
+      .select-operate {
+        font-size: 12px;
+        color: #1B63D9;
+        cursor: pointer;
+      }
+
+      div.ant-select {
+        margin-right: 5px;
+      }
+    }
+
+    section.swiper {
+      padding: 0 16px;
+      height: 206px;
+      span.pre {
+        display: block;
+        width: 18px;
+        height: 34px;
+        background: url(~@/assets/map/pre.normol.svg);
+        &:hover {
+          background: url(~@/assets/map/pre.hover.svg);
+        }
+      }
+
+      span.next {
+        display: block;
+        width: 18px;
+        height: 34px;
+        float: right;
+        background: url(~@/assets/map/next.normol.svg);
+        &:hover {
+          background: url(~@/assets/map/next.hover.svg);
+        }
+      }
+
+      section.chart-content {
+        width: 700px;
+        height: 206px;
+        display: flex;
+        align-items: center;
+        //justify-content: space-between;
+        border: 1px solid #ECECF7;
+        .chart-item {
+          width: 209px;
+          height: 184px;
           margin-right: 16px;
         }
       }
 
+      .ant-carousel /deep/ .slick-slide {
+        text-align: center;
+        height: 206px;
+        line-height: 206px;
+        //background: #364d79;
+        overflow: hidden;
+      }
+
+      .ant-carousel /deep/ .custom-slick-arrow {
+        width: 25px;
+        height: 25px;
+        font-size: 25px;
+        color: #fff;
+        opacity: 0.3;
+        &.slick-prev {
+          left: 0!important;
+        }
+        &.slick-next {
+          right: 0!important;
+        }
+      }
+      .ant-carousel /deep/ .custom-slick-arrow:before {
+        display: none;
+      }
+      .ant-carousel /deep/ .custom-slick-arrow:hover {
+        opacity: 0.5;
+      }
+
+      .ant-carousel /deep/ .slick-slide h3 {
+        color: #fff;
+      }
+
+      .ant-carousel /deep/ .slick-dots-bottom {
+        bottom: 10px;
+        li {
+          button {
+            width: 5px;
+            height: 4px;
+            border-radius: 2px;
+            background: #CBCBE1;
+          }
+          &.slick-active {
+            button {
+              background: #8F90B5;
+              width: 10px;
+              height: 4px;
+              border-radius: 2px;
+            }
+          }
+        }
+      }
     }
+
+    section.list {
+      overflow-y: scroll;
+      //height: 520px;
+      display: flex;
+      flex-direction: column;
+      margin: 16px 16px;
+      padding-bottom: 20px;
+      &::-webkit-scrollbar {
+        width: 6px;
+      }
+      &::-webkit-scrollbar-track {
+        display: none;
+      }
+      /* 滚动条角落 */
+      &::-webkit-scrollbar-thumb {      /*滚动条的轨道*/
+        background-color: #B7B7C7;
+        border-radius: 4px;
+        &:hover {
+          background-color:#9293AA
+        }
+      }
+      .list-item {
+        padding-left: 13px;
+        display: flex;
+        flex-direction: column;
+        width: 690px;
+        height: 84px;
+        padding-bottom: 9px;
+        border-bottom: 1px solid #ECECF7;
+        &:hover {
+          background: #EBF3FF;
+        }
+        header {
+          margin-top: 8px;
+          display: flex;
+          align-items: center;
+          .log {
+            width: 13px;
+            height: 16px;
+            background: url(~@/assets/map/center-hover.svg);
+            margin-right: 8px;
+          }
+          .state {
+            margin-right: 4px;
+            width: 32px;
+            height: 20px;
+            background: #E5F4F8;
+            border-radius: 2px;
+            font-family: Microsoft YaHei;
+            font-size: 12px;
+            color: #0095C2;
+            text-align: center;
+            line-height: 20px;
+          }
+          .name {
+            font-family: Microsoft YaHei;
+            font-size: 14px;
+            color: #1B63D9;
+            line-height: 22px;
+            margin-right: auto;
+          }
+          .operate {
+            margin-right: 12px;
+          }
+        }
+        p {
+          margin-top: 4px;
+          margin-bottom: 0;
+          display: flex;
+          align-items: center;
+          .title {
+            margin-right: 4px;
+            font-family: Microsoft YaHei;
+            font-size: 12px;
+            color: #7D7D94;
+            line-height: 20px;
+          }
+          .info {
+            font-family: MicrosoftYaHei;
+            font-size: 12px;
+            color: #272841;
+            line-height: 20px;
+            margin-right: 16px;
+            &.active {
+              color: #1B63D9;
+            }
+          }
+          .address {
+            font-family: MicrosoftYaHei;
+            font-size: 12px;
+            color: #272841;
+            line-height: 20px;
+            margin-right: 16px;
+          }
+        }
+      }
+      .pagination {
+        margin-top: 12px;
+      }
+
+    }
+
+
   }
 }
+
+
 </style>

@@ -1,24 +1,45 @@
 <template>
-<div class="tip">
-  <div class="tip-triangle-top">
+  <div class="fix-body">
+    <div class="tip">
+      <div class="tip-triangle-top">
+      </div>
+      <p>在{{name}}为您查找到{{num}}家企业数据，<span class="operate" @click="handleClick">浏览全国</span><a-icon type="close"></a-icon></p>
+    </div>
   </div>
-  <p>在杭州市为您查找到123456家企业数据，<span class="operate">浏览全国</span><a-icon type="close"></a-icon></p>
-</div>
+
 </template>
 
 <script>
 export default {
-  name: "tip"
+  name: "tip",
+  props: {
+    name: String,
+    num: Number
+  },
+  methods: {
+    handleClick() {
+      this.$emit('nation')
+    }
+  }
 }
 </script>
 
 <style scoped lang="less">
+.fix-body {
+  position: fixed;
+  display: flex;
+  z-index: 6;
+  justify-content: center;
+  top: 88px;
+  left: 20px;
+}
+
 .tip {
   display: flex;
   position: relative;
   margin-left: 20px;
   margin-top: 20px;
-  width: 370px;
+  min-width: 348px;
   height: 40px;
   background: #fff;
   padding-left: 12px;

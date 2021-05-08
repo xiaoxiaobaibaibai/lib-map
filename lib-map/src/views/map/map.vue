@@ -1,8 +1,9 @@
-/* eslint-disable */
 <template>
   <div class="container">
-    <search-wrap @focus="handleFocusMarher"></search-wrap>
+    <search-wrap @focus="handleFocusMarker" ref="search"></search-wrap>
+    <tip :name="addressTip" :num="numberTip" v-if="tipVisible" @nation="handleNation"></tip>
     <city-list @mark="handleMark" @select="mapCenter"></city-list>
+    <drawer></drawer>
     <div id="selectbox_Drawing" class="selectbox_Drawing"></div>
     <div id="map">
     </div>
@@ -14,6 +15,8 @@ import cityList from "@/components/lib-map/cityList";
 import { style  } from "@/assets/mapstyle";
 import { mapConstant } from "@/assets/city";
 import draw from "@/components/lib-map/draw";
+import drawer from "@/components/lib-map/drawer";
+import tip from "@/components/lib-map/tip";
 
 
 export default {
@@ -27,13 +30,19 @@ export default {
       centerPoint: null, // 中心点
       label: null,
       polyline: null,
-      configOption: []
+      configOption: [],
+      address: {}, //地址解析结果
+      numberTip: 0, //强搜的tip总量
+      tipVisible: false, //强搜的tip显示
+      addressTip: '' //强搜tip范围
     }
   },
   components: {
     searchWrap,
     cityList,
-    draw
+    draw,
+    drawer,
+    tip
   },
   methods: {
       getClickInfo(e) {
@@ -60,15 +69,16 @@ export default {
        * @param {Object} point   百度地图坐标点，必传
        */
       getAddrByPoint(point){
-        debugger
-        var that = this;
-        var geco = new window.BMap.Geocoder();
-        geco.getLocation(point, function(res){
-          console.log(res)
-         // that.BMap.panTo(point)  //将地图的中心点更改为给定的点
-         //  that.form.address = res.address;  //记录该点的详细地址信息
-         //  that.form.addrPoint = point;  //记录当前坐标点
+        let geco = new window.BMap.Geocoder();
+
+        return new Promise((resolve,reject) => {
+          geco.getLocation(point, (res) => {
+            this.address = res
+            console.log('地址解析', res)
+            resolve(true)
+          })
         })
+
       },
       init() {
         debugger
@@ -111,7 +121,7 @@ export default {
 
         // 实例化鼠标绘制工具
         this.drawingManager = new window.BMapLib.DrawingManager(this.map, {
-          enableDrawingTool: true, // 是否显示工具栏
+          enableDrawingTool: false, // 是否显示工具栏
           enableCalculate: true, // 绘制是否进行测距(画线时候)、测面(画圆、多边形、矩形)
           drawingToolOptions: {
             enableTips: true,
@@ -133,10 +143,10 @@ export default {
             area: 50000000 // 面积超限值
           },
           circleOptions: styleOptions, // 圆的样式
-          polylineOptions: LineOptions, // 线的样式
-          polygonOptions: styleOptions, // 多边形的样式
-          rectangleOptions: styleOptions, // 矩形的样式
-          labelOptions: labelOptions // label的样式
+          // polylineOptions: LineOptions, // 线的样式
+          // polygonOptions: styleOptions, // 多边形的样式
+          // rectangleOptions: styleOptions, // 矩形的样式
+          // labelOptions: labelOptions // label的样式
         });
 
         //添加鼠标绘制工具监听事件，用于获取绘制结果
@@ -155,15 +165,17 @@ export default {
 
       },
       handleMark() {
-        debugger
-        this.map.setDefaultCursor("url('http://172.19.80.62:81/gwstatic/static/company_web/public/sign.cur')  3 6, default")
-        this.map.disableDragging()
-        this.map.disableScrollWheelZoom()
-
-        this.map.addEventListener('click', e => { //给地图绑定点击事件
-          this.getAddrByPoint(e.point) //点击后调用逆地址解析函数
-          this.markOnMap(e.point)
-        })
+        // debugger
+        // this.map.setDefaultCursor("url('http://172.19.80.62:81/gwstatic/static/company_web/public/sign.cur')  3 6, default")
+        // this.map.disableDragging()
+        // this.map.disableScrollWheelZoom()
+        //
+        // this.map.addEventListener('click', e => { //给地图绑定点击事件
+        //   this.getAddrByPoint(e.point) //点击后调用逆地址解析函数
+        //   this.markOnMap(e.point)
+        // })
+        this.drawingManager.setDrawingMode(BMAP_DRAWING_CIRCLE);
+        this.drawingManager.open(BMAP_DRAWING_CIRCLE)
 
       },
       markOnMap(p) {
@@ -174,16 +186,20 @@ export default {
        // this.map.addOverlay(marker);                     // 将标注添加到地图中
        this.addMarker(point)
      },
-      addMarker (point){  // 创建图标对象
+    //强搜标记物
+      addMarker (point, name, value){  // 创建图标对象
         // 创建标注对象并添加到地图
      //   var marker = new BMap.Marker(point, {icon: myIcon});
-        const marker = new BMap.Marker(point);
-        this.map.addOverlay(marker);
-        const labelContent = '<div class="map-info"><span class="map-info-title">余杭区</span><span class="map-info-content">1024家</span></div>'
+     //    const marker = new BMap.Marker(point);
+     //    this.map.addOverlay(marker);
+        const labelContent = `<div class="map-info"><span class="map-info-title">${name}</span><span class="map-info-content">${value}家</span></div>`
         let opts = {
           position: point, // 指定文本标注所在的地理位置
         };
         let label = new BMap.Label(labelContent, opts)
+        label.addEventListener('click', e => this.handleLabel(name))
+        //允许覆盖物在map.clearOverlays方法中被清除
+        label.enableMassClear()
         label.setStyle({
           textAlign: 'center',
           width: '88px',
@@ -198,16 +214,6 @@ export default {
         });
         this.map.addOverlay(label)
   },
-      handleFocusMarker() {
-          const level = this.map.getZoom()
-          const center = this.map.getCenter()
-          const url = 'xxx'
-          const data = {
-            level,
-            center
-          }
-          this.$getAxios(url, data, res => this.renderFocusMarker(res))
-      },
       /**
        * 强搜
        * 渲染标记和标签
@@ -218,35 +224,68 @@ export default {
        * @param markerClickCallback 标记点击事件方法回调函数
        * @param center 中心坐标
        */
-      renderFocusMarker(lng, lat, level, data, markerClickCallback, center, isClick) {
+      renderFocusMarker(data) {
         // 1，将地图中心点定位到省市，格式化缩放级别
-        const point = new BMap.Point(lng, lat)
-        this.map.panTo(point)
-        for (let i = 0; i < data.length; i ++) {
-          let label
-          let d = data[i]
-          let opts = {
-            position: d.points[0], // 指定文本标注所在的地理位置
-            // offset:size
-          };
-          const labelContent = d.num;
-          label = new BMap.Label(labelContent, opts)
-          label.setStyle({
-            color: "white",
-            fontSize: "4px",
-            height: "auto",
-            lineHeight: "6px",
-            fontFamily: "微软雅黑",
-            backgroundColor: 'none',
-            maxWidth: 'none',
-            border: 'none',
-            'font-weight':'bold'
-          });
+        // const point = new BMap.Point(lng, lat)
+        // this.map.panTo(point)
+        data.forEach(item => {
+          this.numberTip += item.value
+          const lng = item.coordinates.split(',')[1]
+          const lat = item.coordinates.split(',')[0]
+          const point = new BMap.Point(lng, lat)
 
-        }
+          this.addMarker(point,item.name,item.value)
+        })
+
+        this.tipVisible = true
 
       },
-      handleFocusMarher() {},
+      handleFocusMarker(keyword) {
+        debugger
+
+        //1,点击强搜，获取中心点  当前缩放等级
+        const point = this.map.getCenter()
+        const zoom = this.map.getZoom()
+
+        //2,根据中心点获取地理信息
+        this.getAddrByPoint(point).then(res => {
+          console.log('point,zoom',point,zoom)
+
+          // city: "杭州市"; district: "临平区"; province: "浙江省"; street: "西大街"; streetNumber: "33号"; town: ""
+
+          const addressComponent = this.address.addressComponents
+        //3,根据对应的zoom级别调整参数
+          let areaType = ''
+
+          switch (true) {
+            case (zoom < 5):
+              areaType = '';
+              break
+            case (zoom <= 10):
+              areaType = addressComponent.province;
+              this.addressTip = addressComponent.province
+              break
+            case (zoom <= 15):
+              areaType = `${addressComponent.province}-${addressComponent.city}`;
+              this.addressTip = addressComponent.city
+              break
+          }
+
+          // /standardgwapi/api/company_library/map/force_search
+          const url = 'http://software.myhexin.com/yapi/mock/2486/standardgwapi/api/company_library/map/force_search'
+          const data = {
+            areaType,
+            keyword
+          }
+          this.$getAxios(url, data, res => {
+            if(res.code == 1) {
+              this.renderFocusMarker(res.data.items)
+            }
+          })
+        })
+
+
+      },
 
       /**
        * 画圆
@@ -382,7 +421,22 @@ export default {
           return res.result.location
         }
       },
+    // 浏览全国
+    handleNation() {
+      this.map.clearOverlays()
+      this.map.setZoom(5)
+      this.tipVisible = false
+    },
 
+    //强搜层级跳转
+    handleLabel(name) {
+      const zoom  = this.map.getZoom()
+      this.map.clearOverlays()
+      this.map.setCenter(name)
+      this.map.setZoom(zoom + 5)
+      //通过子组件的enter方法重新调用父组件的handleFocusMarker,拿到最新的input
+      this.$refs.search.handleEnter()
+    }
 
     },
   created() {
@@ -393,21 +447,21 @@ export default {
   }
 }
 </script>
-<style lang="less">
+<style lang="less" scoped>
 div.container {
   width: 100%;
   height: 100%;
   #map {
     width: 100%;
-
     height: 100%;
     cursor: url("./sign.svg") 3 6, default;
   }
 }
 
 
-label.BMapLabel {
+/deep/ label.BMapLabel {
   .map-info {
+    cursor: pointer;
     display: flex;
     flex-direction: column;
     align-items: center;
