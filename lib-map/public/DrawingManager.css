@@ -104,8 +104,8 @@
 /*边长、半径提示窗口*/
 .screenshot {
     position: absolute;
-    background: #fff;
-    border: 1px solid #E9E9E9;
+    /*background: #fff;*/
+    /*border: 1px solid #E9E9E9;*/
     border-radius: 2px;
     color: #333;
     padding: 0 4px;
@@ -118,14 +118,25 @@
     float: right;
 }
 .screenshot .circlShot {
-    width: 62px;
-    text-align: center;
-    line-height: 30px;
-    height: 30px;
+    font-family: Arial MT;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: #999999;
+    line-height: 22px;
+    width: 54px;
+    text-align: left;
+    height: 24px;
+    background: url("img/rule-normal.svg") center bottom no-repeat;
+    background-color: #FFFFFF;
+    border: 1px solid #ECECF7;
+    border-radius: 14px;
 }
 .screenshot #screenshotNum {
     display: inline-block;
-    height: 30px;
+    height: 24px;
+    color: #999999;
     text-align: center;
     cursor: text;
 }

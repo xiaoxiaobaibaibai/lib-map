@@ -6,9 +6,9 @@
       <span class="flex_2">存续</span>
       浙江核心同花顺网络信息股份有限公司
     </p>
-    <span class="close">
-      <a-icon type="close"></a-icon>
-    </span>
+<!--    <span class="close">-->
+<!--      <a-icon type="close"></a-icon>-->
+<!--    </span>-->
   </section>
   <section>
     <p class="desc">
@@ -34,17 +34,17 @@ export default {
 
 <style scoped lang="less">
 .card {
-  position: relative;
-  margin-top: 100px;
-  margin-left: 40%;
-  background: #FFFFFF;
-  //border: 1px solid #ECECF7;
-  border-radius: 2px;
-  box-shadow: 0 4px 12px 0 rgba(10,39,86,0.15);
-  display: flex;
-  flex-direction: column;
-  height: 100px;
-  width: 226px;
+  //position: relative;
+  //margin-top: 100px;
+  //margin-left: 40%;
+  //background: #FFFFFF;
+  ////border: 1px solid #ECECF7;
+  //border-radius: 2px;
+  //box-shadow: 0 4px 12px 0 rgba(10,39,86,0.15);
+  //display: flex;
+  //flex-direction: column;
+  //height: 100px;
+  //width: 226px;
   section.title {
     margin-left: 12px;
     display: flex;
@@ -55,7 +55,8 @@ export default {
       color: #1B63D9;
       line-height: 20px;
       text-align: left;
-      width: 190px;
+      width: 240px;
+      margin-bottom: 0;
       .flex_1 {
         font-family: Lucida Grande;
         font-size: 12px;

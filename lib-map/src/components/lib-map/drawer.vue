@@ -44,13 +44,14 @@
             <!--            style="width: 96px"-->
             <!--          />-->
 
+            <span class="item-title">{{item.name}}</span>
+
             <el-cascader
-              :placeholder="item.name"
+              placeholder="请选择"
               @change="value => onChange(value, item)"
-              style="width: 96px"
-              :options="item.children"
               v-if="item.symbol =='industry'"
               :props="props"
+              style="width: 96px;height: 24px"
               clearable
               v-model="selectOption[item.symbol]"
               :size="'mini'"
@@ -63,10 +64,10 @@
               v-if="item.symbol !='industry' && !item.select"
               v-model="selectOption[item.symbol]"
               :size="'small'"
-              :placeholder="item.name"
+              placeholder="请选择"
               style="width: 96px"
               allowClear
-              :maxTagCount=1
+              :maxTagCount=0
               labelInValue
               @change="value => onChange(value, item)"
               mode="multiple"
@@ -83,7 +84,7 @@
               v-if="item.symbol !='industry' && item.select"
               v-model="selectOption[item.symbol]"
               :size="'small'"
-              :placeholder="item.name"
+              placeholder="请选择"
               style="width: 96px"
               allowClear
               labelInValue
@@ -101,9 +102,10 @@
 
 
         </div>
-        <span @click="handleSelectOperate" class="select-operate">
-      {{isExpand ?  '更多筛选' : '收起筛选'}}
-    </span>
+        <span @click="handleSelectOperate" class="select-operate" :class="{'expand': isExpand}">
+          {{isExpand ?  '更多筛选' : '收起筛选'}}
+          <i></i>
+        </span>
       </section>
       <a-skeleton active :loading="skeleton" active avatar/>
 
@@ -137,7 +139,7 @@
             <span class="log" v-if="index == 0"></span>
             <span class="state">{{item.state}}</span>
             <span class="name">{{item.company_name}}</span>
-            <a-button :size="'small'" class="operate"><i type="search"></i>搜索周边</a-button>
+            <a-button :size="'small'" class="operate" @click="handleSetCircle(item)"><i type="search"></i>搜索周边</a-button>
           </header>
           <p>
             <span class="title">法人</span>
@@ -238,7 +240,7 @@ export default {
         checkStrictly: true,
         expandTrigger: 'hover'
       },
-      drawerVisible: true,
+      drawerVisible: false,
       pagination: {
         current: 1,
         total: 0,
@@ -266,9 +268,10 @@ export default {
         }
         arrTemp[index].push(list[i]);
       }
-      console.log('arrTemp', arrTemp)
+     // console.log('arrTemp', arrTemp)
       return arrTemp;
-    }
+    },
+
   },
   components: {
     mapPie
@@ -284,7 +287,7 @@ export default {
 
     async getData () {
       await this.getCompanyConfig()
-      await console.log('chartList',this.chartList)
+    //  await console.log('chartList',this.chartList)
       await this.getCompanyList()
       const taskTemp = this.chartList.map(item => this.getChartData(item))
       await Promise.all(taskTemp).then(result => {
@@ -302,6 +305,7 @@ export default {
       this.selectContentHigh = 'auto'
 
     },
+
     onChange(value, el) {
       debugger
       //三种组件：单选、多选、级联多选。 el.select 区分单选多选；el.symbol == 'industry'是唯一一个级联多选
@@ -348,13 +352,16 @@ export default {
         })
       }
     },
+
     onSelect(value) {
-      console.log(value)
+    //  console.log(value)
     },
+
     removeAllSelect() {
       this.select = []
       this.selectOption = {}
     },
+
     getCompanyConfig () {
       // const url = '/standardgwapi/api/company_library/map/search_config'
       const url = 'http://software.myhexin.com/yapi/mock/2486/standardgwapi/api/company_library/map/search_config'
@@ -364,13 +371,14 @@ export default {
      return this.$getAxios(url,data, res=>{
         if(res.code == 1) {
           this.configOption = res.data
-          console.log(res.data)
+        //  console.log(res.data)
           this.setOptionValue(res.data)
           this.backNum ++
 
         }
       })
     },
+
     getChartData(item) {
       // standardgwapi/api/standardgwapi/api/company_library/map/chart
       const url = 'http://software.myhexin.com/yapi/mock/2486/standardgwapi/api/standardgwapi/api/company_library/map/chart'
@@ -383,6 +391,7 @@ export default {
         }
       })
     },
+
     getCompanyList() {
       // /standardgwapi/api/company_library/map/company_list
       const url = `http://software.myhexin.com/yapi/mock/2486/standardgwapi/api/company_library/map/company_list`
@@ -398,8 +407,9 @@ export default {
         }
       })
     },
+
     handleClose(item) {
-      console.log(item)
+    //  console.log(item)
       this.select.forEach((el, index) => {
         if(el.symbol == item.symbol) {
           this.select.splice(index, 1)
@@ -421,6 +431,12 @@ export default {
 
     handleCloseDrawer() {
       this.drawerVisible = !this.drawerVisible
+    },
+
+    handleSetCircle(item) {
+    //  console.log(item)
+
+      this.$emit('handleSet', item.coordinates)
     }
   }
 }
@@ -618,10 +634,21 @@ export default {
         display: flex;
         flex-wrap: wrap;
         text-align: left;
-        line-height: 32px;
         overflow: hidden;
         .select-content-item {
-          width: 100px;
+          width: 176px;
+          display: flex;
+          height: 32px;
+
+          span.item-title {
+            text-align: right;
+            font-family: Microsoft YaHei;
+            width: 70px;
+            font-size: 14px;
+            color: #474762;
+            line-height: 22px;
+            margin-right: 4px;
+          }
 
           /deep/ .ant-cascader-menu {
             &::-webkit-scrollbar {
@@ -642,9 +669,40 @@ export default {
       }
 
       .select-operate {
+        display: flex;
+        align-items: center;
+        justify-content: center;
         font-size: 12px;
+        height: 20px;
         color: #1B63D9;
         cursor: pointer;
+        margin-bottom: 16px;
+        i {
+          display: inline-block;
+          width: 16px;
+          height: 16px;
+          background: url(~@/assets/map/less-normal.svg) center center no-repeat;
+        }
+        &:hover {
+          i {
+            background: url(~@/assets/map/less-hover.svg)center center no-repeat;
+
+          }
+        }
+        &.expand {
+          i {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            background: url(~@/assets/map/more-normal.svg)center center no-repeat;
+          }
+          &:hover {
+            i {
+              background: url(~@/assets/map/more-hover.svg)center center no-repeat;
+
+            }
+          }
+        }
       }
 
       div.ant-select {

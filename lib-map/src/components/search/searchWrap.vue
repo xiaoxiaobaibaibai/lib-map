@@ -35,6 +35,7 @@
 
 <script>
 import tip from "@/components/lib-map/tip";
+import { mapState, mapMutations } from "vuex"
 
 export default {
   name: "searchWrap",
@@ -105,12 +106,16 @@ export default {
   },
 
   methods: {
+    ...mapMutations([
+      'setKeyword'
+    ]),
     searchClick() {},
     searchInput() {
       const url = ''
       const data = {
         keyword: this.inputValue
       }
+      this.setKeyword(this.inputValue)
       this.$getAxios(url, data, res => this.handleSuggest(res))
     },
     inputFocus() {
@@ -167,6 +172,9 @@ export default {
     })
   },
   computed: {
+    ...mapState([
+      'keyword'
+    ]),
     placeholderText: function () {
       return  this.moreUlSelectText
     }

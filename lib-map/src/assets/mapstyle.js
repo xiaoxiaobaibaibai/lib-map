@@ -1,4 +1,15 @@
-const style = [{
+const style = [
+
+  {
+    // 地图背景
+    "featureType": "land",
+    "elementType": "all",
+    "stylers": {
+      "color": "red",
+      "lightness": -1
+    }
+  },
+  {
   "featureType": "water",
   "elementType": "geometry",
   "stylers": {

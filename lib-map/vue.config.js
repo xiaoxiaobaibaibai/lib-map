@@ -22,6 +22,10 @@ module.exports = {
       "api/baidu/get/address": {
         changeOrigin: true,
         target: 'https://api.map.baidu.com/geocoding/v3/'
+      },
+      "/standardgwapi/api/":{
+        changeOrigin: true,
+        target: 'http://172.19.80.62:81/'
       }
     }
   },

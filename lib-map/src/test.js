@@ -13,7 +13,6 @@ DrawingManager.prototype._setCircle = function (point, radius) {
     overlays = [],
     centerPoint = null; // 圆的中心点
 
-  var radius = null;
   var moveMarker = null;
   var polyline = null;
   var radiusWindow = null;
@@ -59,17 +58,17 @@ DrawingManager.prototype._setCircle = function (point, radius) {
    * 绘制圆形过程中，鼠标移动过程的事件
    */
   var moveAction = function (e) {
-    radius = 0
-    circle.setRadius(me._map.getDistance(centerPoint, e.point));
+    // radius = 3000
+    circle.setRadius(radius);
 
     map.removeOverlay(tip_label);
 
-    tip_label = new BMap.Label('半径：' + radius + '米<br>松开完成绘制', {
-      position: e.point, // 指定文本标注所在的地理位置
-      offset: new BMap.Size(10, 10) // 设置文本偏移量
-    });
-    tip_label.setStyle(me.labelOptions);
-    map.addOverlay(tip_label);
+    // tip_label = new BMap.Label('半径：' + radius + '米<br>松开完成绘制', {
+    //   position: e.point, // 指定文本标注所在的地理位置
+    //   offset: new BMap.Size(10, 10) // 设置文本偏移量
+    // });
+    // tip_label.setStyle(me.labelOptions);
+    // map.addOverlay(tip_label);
   };
 
   /**
@@ -161,5 +160,60 @@ DrawingManager.prototype._setCircle = function (point, radius) {
     mask.removeEventListener('mousemove', mousedownAction);
     baidu.un(document, 'mouseup', endAction);
   };
+
+  /**
+   * 鼠标点击起始点
+   */
+  var mousedownAction = function (e) {
+    baidu.preventDefault(e);
+    baidu.stopBubble(e);
+
+    if (me.controlButton == 'right' && e.button == 1) {
+      return;
+    }
+
+    if (centerPoint == null) {
+      startAction(e);
+    }
+
+  };
+
+  /**
+   * 非绘制圆形过程中，鼠标移动过程的事件
+   */
+  var mousemoveAction = function (e) {
+    baidu.preventDefault(e);
+    baidu.stopBubble(e);
+
+    map.removeOverlay(tip_label);
+
+    tip_label = new BMap.Label('按下确认中心点，拖拽确认半径', {
+      position: e.point, // 指定文本标注所在的地理位置
+      offset: new BMap.Size(10, 10) // 设置文本偏移量
+    });
+    tip_label.setStyle(me.labelOptions);
+    map.addOverlay(tip_label);
+
+  };
+
+  var centerDragstart = function (e) {
+    map.removeOverlay(moveMarker);
+    map.removeOverlay(polyline);
+    map.removeOverlay(radiusWindow);
+    map.removeOverlay(operateWindow);
+  };
+  var centerDragging = function (e) {
+
+    centerPoint = e.point;
+    circle.setCenter(e.point);
+  };
+  var centerDragend = function (e) {
+    centerPoint = e.point;
+    endAction(e);
+  };
+
+
+  mask.addEventListener('mousedown', mousedownAction);
+  mask.addEventListener('mousemove', mousemoveAction);
 
 }

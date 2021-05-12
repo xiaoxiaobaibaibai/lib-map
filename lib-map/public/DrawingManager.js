@@ -630,7 +630,8 @@ var BMAP_DRAWING_MARKER    = "marker",     // 鼠标画点模式
      *         strokeColor: "#333"
      *     });
      */
-    BMapLib.DrawingManager = function (map, opts) {
+    // Map 百度地图对象 opts 画图配置 func 成功回调
+    BMapLib.DrawingManager = function (map, opts, func) {
         if (!map) {
             return;
         }
@@ -640,7 +641,7 @@ var BMAP_DRAWING_MARKER    = "marker",     // 鼠标画点模式
         opts = opts || {};
         this.overlays = []; // 用来存储覆盖物
 
-        this._initialize(map, opts);
+        this._initialize(map, opts, func);
     };
 
     // 通过baidu.lang下的inherits方法，让DrawingManager继承baidu.lang.Class
@@ -706,6 +707,10 @@ var BMAP_DRAWING_MARKER    = "marker",     // 鼠标画点模式
         }
 
     };
+
+    DrawingManager.prototype.setCircle = function (point, radius, func) {
+      this._setCircle(point, radius, func)
+    }
 
     /**
      * 获取当前的绘制模式
@@ -887,7 +892,7 @@ var BMAP_DRAWING_MARKER    = "marker",     // 鼠标画点模式
      * @param {Map} 地图实例
      * @param {Object} 参数
      */
-    DrawingManager.prototype._initialize = function (map, opts) {
+    DrawingManager.prototype._initialize = function (map, opts, func) {
 
         /**
          * map对象
@@ -902,6 +907,8 @@ var BMAP_DRAWING_MARKER    = "marker",     // 鼠标画点模式
          * @type {Object}
          */
         this._opts = opts;
+
+        this._func = func
 
         /**
          * 当前的绘制模式, 默认是绘制点
@@ -1128,6 +1135,7 @@ var BMAP_DRAWING_MARKER    = "marker",     // 鼠标画点模式
         var me = this,
             map = this._map,
             mask = this._mask,
+            func = this._func,
             circle = null,
             overlays = [],
             centerPoint = null; // 圆的中心点
@@ -1180,7 +1188,9 @@ var BMAP_DRAWING_MARKER    = "marker",     // 鼠标画点模式
         /**
          * 绘制圆形过程中，鼠标移动过程的事件
          */
+
         var moveAction = function (e) {
+          console.log('moveAction')
             radius = me._map.getDistance(centerPoint, e.point).toFixed(0);
             circle.setRadius(me._map.getDistance(centerPoint, e.point));
 
@@ -1198,6 +1208,7 @@ var BMAP_DRAWING_MARKER    = "marker",     // 鼠标画点模式
          * 绘制圆形结束
          */
         var endAction = function (e) {
+          console.log('endAction')
             var cz = map.getViewport(circle.getBounds());
             cz.zoom -= 1;
             map.setViewport(cz);
@@ -1207,7 +1218,7 @@ var BMAP_DRAWING_MARKER    = "marker",     // 鼠标画点模式
             mask.hide();
 
             moveMarker = new BMap.Marker(endPoint);
-            var moveIcon = new BMap.Icon('./nbsearch2.png', new BMap.Size(40, 20));
+            var moveIcon = new BMap.Icon('./btn-normal.svg', new BMap.Size(40, 20));
             moveIcon.setImageSize(new BMap.Size(40, 40));
             moveIcon.setImageOffset(new BMap.Size(0, -10));
             moveMarker.setIcon(moveIcon);
@@ -1216,7 +1227,7 @@ var BMAP_DRAWING_MARKER    = "marker",     // 鼠标画点模式
 
             polyline = new BMap.Polyline([centerPoint, endPoint], lineStyel);
 
-            var midPoint = new BMap.Point((circle.getBounds().getNorthEast().lng + centerPoint.lng) / 2, centerPoint.lat);
+            var midPoint = new BMap.Point(circle.getBounds().getNorthEast().lng, centerPoint.lat);
             radiusWindow = new Screenshot('circle', midPoint, radius, circle, me);
 
             overlays = overlays.concat([moveMarker, polyline, radiusWindow]);
@@ -1235,11 +1246,12 @@ var BMAP_DRAWING_MARKER    = "marker",     // 鼠标画点模式
             operateWindow = new Operate(targetOverlay, me);
 
             map.addOverlay(moveMarker);
-            map.addOverlay(polyline);
+            // map.addOverlay(polyline);
             map.addOverlay(radiusWindow);
-            map.addOverlay(operateWindow);
+            map.addOverlay(operateWindow);//调整半径的按钮
 
             radiusWindow.addEventListener('radiuschange', function (e) {
+              console.log('radiuschange')
                 var radius = e.radius;
                 circle.setRadius(radius);
                 var ePoint = getPointByDistance(centerPoint, radius, 'east');
@@ -1258,8 +1270,9 @@ var BMAP_DRAWING_MARKER    = "marker",     // 鼠标画点模式
             });
 
             moveMarker.addEventListener('dragging', function (e) {
+              console.log('dragging')
                 var dragLeftPoint = new BMap.Point(e.point.lng, centerPoint.lat);
-                var halflng = e.point.lng > centerPoint.lng ? (circle.getBounds().getNorthEast().lng + centerPoint.lng) / 2 : (circle.getBounds().getSouthWest().lng + centerPoint.lng) / 2;
+                var halflng = e.point.lng > centerPoint.lng ? circle.getBounds().getNorthEast().lng : circle.getBounds().getSouthWest().lng;
                 var isright = e.point.lng > centerPoint.lng ? true : false;
                 var halfLeftPoint = new BMap.Point(halflng, centerPoint.lat);
 
@@ -1272,10 +1285,12 @@ var BMAP_DRAWING_MARKER    = "marker",     // 鼠标画点模式
             });
 
             moveMarker.addEventListener('dragend', function (e) {
-                operateWindow.updateWindow();
-                var cz = map.getViewport(circle.getBounds());
-                cz.zoom -= 1;
-                map.setViewport(cz);
+              console.log('dragend')
+              operateWindow.updateWindow();
+              var cz = map.getViewport(circle.getBounds());
+              cz.zoom -= 1;
+              map.setViewport(cz);
+              func(centerPoint, radius);
             });
 
             mask.disableEdgeMove();
@@ -1310,7 +1325,7 @@ var BMAP_DRAWING_MARKER    = "marker",     // 鼠标画点模式
 
             map.removeOverlay(tip_label);
 
-            tip_label = new BMap.Label('按下确认中心点，拖拽确认半径', {
+            tip_label = new BMap.Label('点击左键设定中心点,右键或Esc退出', {
                 position: e.point, // 指定文本标注所在的地理位置
                 offset: new BMap.Size(10, 10) // 设置文本偏移量
             });
@@ -1345,58 +1360,212 @@ var BMAP_DRAWING_MARKER    = "marker",     // 鼠标画点模式
      * point {point}中心点,必传
      * radius {number} 半径,可传,默认3km
      */
-    DrawingManager.prototype._setCircle = function (point,  radius = 3) {
-      var me = this,
-        map = this._map,
-        mask = this._mask,
-        circle = null,
-        overlays = [],
-        centerPoint = null; // 圆的中心点
+  var tip_label = null;
+  DrawingManager.prototype._setCircle = function (point, radius =  3000, func) {
+    if (!this._mask) {
+      this._mask = new Mask();
+    }
+    // 变量设置
+    var me = this,
+      map = this._map,
+      mask = this._mask,
+      circle = null,
+      overlays = [],
+      centerPoint = null; // 圆的中心点
 
-      var radius = null;
-      var moveMarker = null;
-      var polyline = null;
-      var radiusWindow = null;
-      var operateWindow = null;
 
-      var lineStyel = {
-        strokeColor: '#4E6DF1', // 边线颜色。
-        strokeWeight: 2 // 边线的宽度，以像素为单位。
+    var moveMarker = null;
+    var polyline = null;
+    var radiusWindow = null;
+    var operateWindow = null;
+
+    var lineStyel = {
+      strokeColor: '#4E6DF1', // 边线颜色。
+      strokeWeight: 2 // 边线的宽度，以像素为单位。
+    };
+
+    var centerIcon = new BMap.Icon('./circenter.svg', new BMap.Size(20, 20));
+    var shadow = new BMap.Icon('./maker-shadow.png', new BMap.Size(21, 33));
+
+    /**
+     * 开始绘制圆形
+     */
+      // 中心点标记
+      centerPoint = point;
+
+      var centerMarker = new BMap.Marker(centerPoint);
+      centerIcon.setImageSize(new BMap.Size(20, 20));
+      centerMarker.setIcon(centerIcon);
+      centerMarker.setShadow(shadow);
+      centerMarker.enableDragging();
+      // 拖动事件
+      centerMarker.addEventListener('dragstart', centerDragstart);
+      centerMarker.addEventListener('dragging', centerDragging);
+      centerMarker.addEventListener('dragend', centerDragend);
+      map.addOverlay(centerMarker);
+
+      overlays.push(centerMarker);
+
+      circle = new BMap.Circle(centerPoint, radius, me.circleOptions);
+      map.addOverlay(circle);
+      mask.enableEdgeMove();
+      // mask.addEventListener('mousemove', moveAction);
+      // baidu.on(document, 'mouseup', endAction);
+
+
+    /**
+     * 绘制圆形过程中，鼠标移动过程的事件
+     */
+
+    /**
+     * 绘制圆形结束
+     */
+
+    console.log(circle)
+    debugger
+
+      var cz = map.getViewport(circle.getBounds());
+      cz.zoom -= 1;
+      map.setViewport(cz);
+      map.removeOverlay(tip_label);
+
+      var endPoint = new BMap.Point(circle.getBounds().getNorthEast().lng, centerPoint.lat);
+      mask.hide();
+
+      moveMarker = new BMap.Marker(endPoint);
+      var moveIcon = new BMap.Icon('./nbsearch2.png', new BMap.Size(40, 20));
+      moveIcon.setImageSize(new BMap.Size(40, 40));
+      moveIcon.setImageOffset(new BMap.Size(0, -10));
+      moveMarker.setIcon(moveIcon);
+      moveMarker.setShadow(shadow);
+      moveMarker.enableDragging();
+
+      polyline = new BMap.Polyline([centerPoint, endPoint], lineStyel);
+
+      var midPoint = new BMap.Point(circle.getBounds().getNorthEast().lng, centerPoint.lat);
+      radiusWindow = new Screenshot('circle', midPoint, radius, circle, me);
+
+      overlays = overlays.concat([moveMarker, polyline, radiusWindow]);
+      var limit = null;
+      if (me.limit) {
+        limit = me.limit.area;
+      }
+
+      var targetOverlay = {
+        limit: limit,
+        type: 'circle',
+        point: endPoint,
+        overlay: circle,
+        overlays: overlays
       };
+      operateWindow = new Operate(targetOverlay, me);
 
-      var centerIcon = new BMap.Icon('./circenter.svg', new BMap.Size(20, 20));
-      var shadow = new BMap.Icon('./maker-shadow.png', new BMap.Size(21, 33));
+      map.addOverlay(moveMarker);
+      map.addOverlay(polyline);
+      map.addOverlay(radiusWindow);
+      map.addOverlay(operateWindow);
+      func(centerPoint, radius)
 
-      /**
-       * 开始绘制圆形
-       */
+      radiusWindow.addEventListener('radiuschange', function (e) {
+        console.log('radiuschange')
+        var radius = e.radius;
+        circle.setRadius(radius);
+        var ePoint = getPointByDistance(centerPoint, radius, 'east');
+        var dragLeftPoint = new BMap.Point(ePoint.lng, centerPoint.lat);
+        var halflng = ePoint.lng > centerPoint.lng ? (circle.getBounds().getNorthEast().lng + centerPoint.lng) / 2 : (circle.getBounds().getSouthWest().lng + centerPoint.lng) / 2;
+        var halfLeftPoint = new BMap.Point(halflng, centerPoint.lat);
+        moveMarker.setPosition(dragLeftPoint);
+        radiusWindow.setInfo(halfLeftPoint, radius);
+        operateWindow.setPosition(dragLeftPoint, true);
+        operateWindow.updateWindow();
+        polyline.setPath([centerPoint, dragLeftPoint]);
 
-      var startAction = function (e) {
-        console.log('鼠标画圆功能e,me =====',e,me)
+        var cz = map.getViewport(circle.getBounds());
+        cz.zoom -= 1;
+        map.setViewport(cz);
+      });
 
-        centerPoint = e.point;
+      moveMarker.addEventListener('dragging', function (e) {
+        var dragLeftPoint = new BMap.Point(e.point.lng, centerPoint.lat);
+        var halflng = e.point.lng > centerPoint.lng ? (circle.getBounds().getNorthEast().lng + centerPoint.lng) / 2 : (circle.getBounds().getSouthWest().lng + centerPoint.lng) / 2;
+        var isright = e.point.lng > centerPoint.lng ? true : false;
+        var halfLeftPoint = new BMap.Point(halflng, centerPoint.lat);
 
-        var centerMarker = new BMap.Marker(centerPoint);
-        centerIcon.setImageSize(new BMap.Size(20, 20));
-        centerMarker.setIcon(centerIcon);
-        centerMarker.setShadow(shadow);
-        centerMarker.enableDragging();
-        centerMarker.addEventListener('dragstart', centerDragstart);
-        centerMarker.addEventListener('dragging', centerDragging);
-        centerMarker.addEventListener('dragend', centerDragend);
-        map.addOverlay(centerMarker);
+        e.target.setPosition(dragLeftPoint);
+        radiusWindow.setInfo(halfLeftPoint, me._map.getDistance(centerPoint, e.point).toFixed(0));
+        operateWindow.setPosition(dragLeftPoint, isright);
+        polyline.setPath([centerPoint, dragLeftPoint]);
+        radius = me._map.getDistance(centerPoint, e.point).toFixed(0);
+        circle.setRadius(me._map.getDistance(centerPoint, e.point));
+      });
 
-        overlays.push(centerMarker);
+      moveMarker.addEventListener('dragend', function (e) {
+        operateWindow.updateWindow();
+        var cz = map.getViewport(circle.getBounds());
+        cz.zoom -= 1;
+        map.setViewport(cz);
+        func(centerPoint, radius)
+      });
 
-        circle = new BMap.Circle(centerPoint, 0, me.circleOptions);
-        map.addOverlay(circle);
-        mask.enableEdgeMove();
-        mask.addEventListener('mousemove', moveAction);
-        baidu.on(document, 'mouseup', endAction);
-      };
+      mask.disableEdgeMove();
+      mask.removeEventListener('mousemove', mousedownAction);
 
+    /**
+     * 鼠标点击起始点
+     */
+    var mousedownAction = function (e) {
+      baidu.preventDefault(e);
+      baidu.stopBubble(e);
+
+      if (me.controlButton == 'right' && e.button == 1) {
+        return;
+      }
+
+      if (centerPoint == null) {
+        startAction(e);
+      }
 
     };
+
+    /**
+     * 非绘制圆形过程中，鼠标移动过程的事件
+     */
+    var mousemoveAction = function (e) {
+      baidu.preventDefault(e);
+      baidu.stopBubble(e);
+
+      map.removeOverlay(tip_label);
+
+      tip_label = new BMap.Label('按下确认中心点，拖拽确认半径', {
+        position: e.point, // 指定文本标注所在的地理位置
+        offset: new BMap.Size(10, 10) // 设置文本偏移量
+      });
+      tip_label.setStyle(me.labelOptions);
+      map.addOverlay(tip_label);
+
+    };
+
+    var centerDragstart = function (e) {
+      map.removeOverlay(moveMarker);
+      map.removeOverlay(polyline);
+      map.removeOverlay(radiusWindow);
+      map.removeOverlay(operateWindow);
+    };
+    var centerDragging = function (e) {
+
+      centerPoint = e.point;
+      circle.setCenter(e.point);
+    };
+    var centerDragend = function (e) {
+      centerPoint = e.point;
+      endAction(e);
+    };
+
+
+    mask.addEventListener('mousedown', mousedownAction);
+    mask.addEventListener('mousemove', mousemoveAction);
+
+  }
 
 
 
@@ -1993,7 +2162,7 @@ var BMAP_DRAWING_MARKER    = "marker",     // 鼠标画点模式
         this._map = map;
         var div = this.div = document.createElement('div');
         div.className = 'operateWindow';
-        var html = '<div><span id="confirmOperate"></span><span id="cancelOperate"></span><span id="warnOperate">面积不超过' + this.limit / 10000 + '万平方米！</span></div>';
+        var html = '<div></span><span id="warnOperate">面积不超过' + this.limit / 10000 + '万平方米！</span></div>';
         div.innerHTML = html;
         this._map.addEventListener('resize', function (e) {
             me._adjustSize(e.size);
@@ -2009,49 +2178,49 @@ var BMAP_DRAWING_MARKER    = "marker",     // 鼠标画点模式
         var map = this._map;
         var overlay = this.overlay;
         var overlays = this.overlays;
-        document.getElementById('confirmOperate').addEventListener('click', function (e) {
-            map.removeOverlay(that);
-
-            if (that.type == 'rectangle') {
-                var calculate = that.DrawingManager._calculate(overlay, overlay.getPath());
-            }
-            else if (that.type == 'circle') {
-                var calculate = that.DrawingManager._calculate(overlay, that.point);
-            }
-            else if (that.type == 'polygon') {
-                var calculate = that.DrawingManager._calculate(overlay, (overlay.getPath()));
-                that.DrawingManager.overlays.push(overlay);
-                overlay.disableEditing();
-            }
-
-            that.DrawingManager._dispatchOverlayComplete(overlay, calculate);
-
-            for (var i = 0; i < overlays.length; i++) {
-                if (Array.isArray(overlays[i])) {
-                    for (var k in overlays[i]) {
-                        map.removeOverlay(overlays[i][k]);
-                    }
-                } else {
-                    map.removeOverlay(overlays[i]);
-                }
-            }
-            that.DrawingManager.close();
-        });
-        document.getElementById('cancelOperate').addEventListener('click', function (e) {
-            map.removeOverlay(that);
-            for (var i = 0; i < overlays.length; i++) {
-                if (Array.isArray(overlays[i])) {
-                    for (var k in overlays[i]) {
-                        map.removeOverlay(overlays[i][k]);
-                    }
-                } else {
-                    map.removeOverlay(overlays[i]);
-                }
-            }
-            map.removeOverlay(overlay);
-            that.DrawingManager._mask.show();
-            that.DrawingManager._setDrawingMode(that.type);
-        });
+        // document.getElementById('confirmOperate').addEventListener('click', function (e) {
+        //     map.removeOverlay(that);
+        //
+        //     if (that.type == 'rectangle') {
+        //         var calculate = that.DrawingManager._calculate(overlay, overlay.getPath());
+        //     }
+        //     else if (that.type == 'circle') {
+        //         var calculate = that.DrawingManager._calculate(overlay, that.point);
+        //     }
+        //     else if (that.type == 'polygon') {
+        //         var calculate = that.DrawingManager._calculate(overlay, (overlay.getPath()));
+        //         that.DrawingManager.overlays.push(overlay);
+        //         overlay.disableEditing();
+        //     }
+        //
+        //     that.DrawingManager._dispatchOverlayComplete(overlay, calculate);
+        //
+        //     for (var i = 0; i < overlays.length; i++) {
+        //         if (Array.isArray(overlays[i])) {
+        //             for (var k in overlays[i]) {
+        //                 map.removeOverlay(overlays[i][k]);
+        //             }
+        //         } else {
+        //             map.removeOverlay(overlays[i]);
+        //         }
+        //     }
+        //     that.DrawingManager.close();
+        // });
+        // document.getElementById('cancelOperate').addEventListener('click', function (e) {
+        //     map.removeOverlay(that);
+        //     for (var i = 0; i < overlays.length; i++) {
+        //         if (Array.isArray(overlays[i])) {
+        //             for (var k in overlays[i]) {
+        //                 map.removeOverlay(overlays[i][k]);
+        //             }
+        //         } else {
+        //             map.removeOverlay(overlays[i]);
+        //         }
+        //     }
+        //     map.removeOverlay(overlay);
+        //     that.DrawingManager._mask.show();
+        //     that.DrawingManager._setDrawingMode(that.type);
+        // });
     };
 
     Operate.prototype.updateWindow = function () {
@@ -2070,11 +2239,11 @@ var BMAP_DRAWING_MARKER    = "marker",     // 鼠标画点模式
         }
 
         if (Object.prototype.toString.call(limit) === '[object Number]' && calculate.data > limit) {
-            document.getElementById('confirmOperate').style.display = 'none';
+            // document.getElementById('confirmOperate').style.display = 'none';
             document.getElementById('warnOperate').style.display = 'block';
         }
         else {
-            document.getElementById('confirmOperate').style.display = 'block';
+            // document.getElementById('confirmOperate').style.display = 'block';
             document.getElementById('warnOperate').style.display = 'none';
         }
     };
@@ -2123,8 +2292,8 @@ var BMAP_DRAWING_MARKER    = "marker",     // 鼠标画点模式
         div.className = 'screenshot';
         if (this.type == 'circle') {
           debugger
-            let num = this.number / 1000 + ''
-            var html = '<div class="circlShot"><span id="screenshotNum">' + num + '</span><input id="circleInput" type="text" /><span class="unit">公里</span></div>';
+            let num = (this.number / 1000).toFixed(1) + ''
+            var html = '<div class="circlShot"><span id="screenshotNum">' + num + '</span><span class="unit">KM</span></div>';
         }
         else if (this.type == 'rectangle') {
             var html = '<div class="rectWH"><div class="wh"><span id="rectWidth">' + this.number.width + '</span><input id="rectWidthInput" type="text" /></div><span class="multiple">x</span><div class="wh"><span id="rectHeight">' + this.number.height + '</span><input id="rectHeightInput" type="text" /></div><span class="unit">米</span></div>';
@@ -2140,7 +2309,7 @@ var BMAP_DRAWING_MARKER    = "marker",     // 鼠标画点模式
     };
 
     Screenshot.prototype._bind = function () {
-      let num = this.number / 1000 + ''
+      let num = (this.number / 1000).toFixed(1) + ''
       this.setNumber(num);
 
         if (this.type == 'circle') {
@@ -2153,41 +2322,41 @@ var BMAP_DRAWING_MARKER    = "marker",     // 鼠标画点模式
     Screenshot.prototype.bindCircleEvent = function () {
         var that = this;
         var circleSpn = document.getElementById('screenshotNum');
-        var circleInput = document.getElementById('circleInput');
-        circleSpn.addEventListener('click', function (e) {
-            var val = circleSpn.innerText;
-            circleSpn.style.display = 'none';
-            circleInput.value = val;
-            circleInput.style.display = 'inline-block';
-            circleInput.focus();
-        });
-        circleInput.addEventListener('click', function (e) {
-            circleInput.focus();
-        });
-        circleInput.addEventListener('keydown', function (e) {
-            if (e.keyCode === 13) {
-                var val = circleInput.value;
-                circleInput.style.display = 'none';
-                circleSpn.style.display = 'inline-block';
-                circleSpn.innerText = val;
-                var opt = {
-                    radius: val,
-                    overlay: that.overlay
-                };
-                that._dispatchRadiusChange(opt);
-            }
-        });
-        circleInput.addEventListener('blur', function (e) {
-            var val = circleInput.value;
-            circleInput.style.display = 'none';
-            circleSpn.style.display = 'inline-block';
-            circleSpn.innerText = val;
-            var opt = {
-                radius: val,
-                overlay: that.overlay
-            };
-            that._dispatchRadiusChange(opt);
-        });
+        // var circleInput = document.getElementById('circleInput');
+        // circleSpn.addEventListener('click', function (e) {
+        //     var val = circleSpn.innerText;
+        //     circleSpn.style.display = 'none';
+        //     circleInput.value = val;
+        //     circleInput.style.display = 'inline-block';
+        //     circleInput.focus();
+        // });
+        // circleInput.addEventListener('click', function (e) {
+        //     circleInput.focus();
+        // });
+        // circleInput.addEventListener('keydown', function (e) {
+        //     if (e.keyCode === 13) {
+        //         var val = circleInput.value;
+        //         circleInput.style.display = 'none';
+        //         circleSpn.style.display = 'inline-block';
+        //         circleSpn.innerText = val;
+        //         var opt = {
+        //             radius: val,
+        //             overlay: that.overlay
+        //         };
+        //         that._dispatchRadiusChange(opt);
+        //     }
+        // });
+        // circleInput.addEventListener('blur', function (e) {
+        //     var val = circleInput.value;
+        //     circleInput.style.display = 'none';
+        //     circleSpn.style.display = 'inline-block';
+        //     circleSpn.innerText = val;
+        //     var opt = {
+        //         radius: val,
+        //         overlay: that.overlay
+        //     };
+        //     that._dispatchRadiusChange(opt);
+        // });
     };
 
     Screenshot.prototype.bindRectEvent = function () {
@@ -2257,7 +2426,7 @@ var BMAP_DRAWING_MARKER    = "marker",     // 鼠标画点模式
     };
 
     Screenshot.prototype.setInfo = function (point, number) {
-       let num = number / 1000 + ''
+       let num = (number / 1000).toFixed(1) + ''
         this.setNumber(num);
         this.setPosition(point);
     };
@@ -2273,13 +2442,14 @@ var BMAP_DRAWING_MARKER    = "marker",     // 鼠标画点模式
     };
 
     Screenshot.prototype.setPosition = function (point) {
+      debugger
         this.point = point;
         var map = this._map,
             type = this.type,
             pixel = map.pointToOverlayPixel(this.point);
         if (type == 'circle') {
-            this.div.style.left = pixel.x - 30 + 'px';
-            this.div.style.top = pixel.y - 40 + 'px';
+            this.div.style.left = pixel.x + 20 + 'px';
+            this.div.style.top = pixel.y - 10 + 'px';
         }
         else if (type == 'rectangle') {
             this.div.style.left = pixel.x + 'px';
@@ -2288,13 +2458,13 @@ var BMAP_DRAWING_MARKER    = "marker",     // 鼠标画点模式
 
     };
 
-    Screenshot.prototype.draw = function () {
+    Screenshot.prototype.draw = function () {debugger
         var map = this._map,
             type = this.type,
             pixel = map.pointToOverlayPixel(this.point);
         if (type == 'circle') {
-            this.div.style.left = pixel.x - 30 + 'px';
-            this.div.style.top = pixel.y - 40 + 'px';
+            this.div.style.left = pixel.x + 20 + 'px';
+            this.div.style.top = pixel.y - 10 + 'px';
         }
         else if (type == 'rectangle') {
             this.div.style.left = pixel.x + 'px';
