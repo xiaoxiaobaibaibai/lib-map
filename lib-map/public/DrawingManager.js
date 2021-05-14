@@ -1164,6 +1164,11 @@ var BMAP_DRAWING_MARKER    = "marker",     // 鼠标画点模式
                 return;
             }
 
+            if(e.button == 2) {
+              me.close()
+              return;
+            }
+
             centerPoint = e.point;
 
             var centerMarker = new BMap.Marker(centerPoint);
@@ -1297,6 +1302,7 @@ var BMAP_DRAWING_MARKER    = "marker",     // 鼠标画点模式
             mask.removeEventListener('mousemove', moveAction);
             mask.removeEventListener('mousemove', mousedownAction);
             baidu.un(document, 'mouseup', endAction);
+            func(centerPoint, radius);
         };
 
         /**

@@ -6,6 +6,9 @@ const mutations = {
   },
   setCompanyConfig(state, value) {
     this.state.companyConfig = value
+  },
+  setCompanyMap(state, value) {
+    this.state.companyMap = value
   }
 }
 

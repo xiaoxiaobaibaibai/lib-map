@@ -43,7 +43,7 @@ export default {
       this.option = {
         title: {
           show: true,
-          text: '上市状态统计',
+          text: this.chartData.name,
           textStyle: {
             'font-family': 'Microsoft YaHei',
             'fontSize': '14px',
@@ -84,7 +84,7 @@ export default {
         color: ['#4D5999', '#3DB4CC','#F2A354', '#458BD1', '#F261AA', '#F2D754', '#CCCCCC'],
         series: [
           {
-            name: '上市状态',
+            name: this.chartData.name,
             type: 'pie',
             radius: ['30%', '40%'],
             // avoidLabelOverlap: false,
@@ -115,7 +115,7 @@ export default {
 
 <style scoped>
 .echarts {
-  width: 100%;
-  height: 100%;
+  width: 209px;
+  height: 184px;
 }
 </style>

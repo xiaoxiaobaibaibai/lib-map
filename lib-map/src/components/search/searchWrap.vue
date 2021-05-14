@@ -17,9 +17,9 @@
 
         <ul class="moreUl" v-if="moreUlVisible">
           <li v-for="(item,index) in moreUlData" :class="{'active': index == moreUlSelect}">
-            <span class="moreUl-name" v-html="item.name"></span>
-            <span class="moreUl-type" :class="{'type-address': item.type == '地址'}">{{item.type}}</span>
-            <span class="moreUl-address">{{item.address}}</span>
+            <span class="moreUl-name" v-html="item.matchField.name ?  item.matchField.name.highlight : item.companyName"></span>
+            <span class="moreUl-type" :class="{'type-address': item.matchedSource == '地址匹配'}">{{item.matchedSource.slice(0,2)}}</span>
+            <span class="moreUl-address" :title="item.address">{{item.address}}</span>
           </li>
           <li v-if="empty" class="empty">未找到相关地点，请输入精确名称再次搜索</li>
         </ul>
@@ -43,60 +43,9 @@ export default {
     return {
       inputValue: '',
       moreUlVisible: false,
-      moreUlData: [
-      {
-        name: `<em class="hl">浙江</em>园林设计院南部宏达分院股份有限公司`,
-        title: '浙江核新同花顺网络信息股份有限公司',
-        type: '企业',
-        address: '杭州余杭区',
-        point: {
-          lng: 'yy',
-          lat: 'xx'
-        }
-      },
-        {
-          name: `<em class="hl">杭州</em>园林设计院南部宏达分院股份有限公司`,
-          title: '杭州园林设计院南部宏达分院股份有限公司',
-          type: '企业',
-          address: '杭州余杭区'
-        },
-        {
-          name: `<em class="hl">杭州</em>园林设计院南部宏达分院股份有限公司`,
-          title: '小米科技有限责任公司',
-          type: '地址',
-          address: '杭州余杭区'
-        },
-        {
-          name: `<em class="hl">杭州</em>园林设计院南部宏达分院股份有限公司`,
-          title: '中国农业银行股份有限公司',
-          type: '企业',
-          address: '杭州余杭区'
-        },
-        {
-          name: `<em class="hl">杭州</em>园林设计院南部宏有限公司`,
-          title: '杭州园林设计院南部宏达分院股份有限公司',
-          type: '地址',
-          address: '杭州余杭区'
-        },
-        {
-          name: `<em class="hl">武汉</em>园林设计院南部宏达分院股份有限公司`,
-          title: '武汉园林设计院南部宏达分院股份有限公司',
-          type: '企业',
-          address: '杭州余杭区'
-        },        {
-          name: `<em class="hl">杭州</em>园林设计院南部宏达分院股份有限公司`,
-          title: '杭州园林设计院南部宏达分院股份有限公司',
-          type: '企业',
-          address: '杭州余杭区'
-        },        {
-          name: `<em class="hl">杭州</em>园林设计院南部宏达分院股份有限公司`,
-          title: '闽侯启初商务咨询合伙企业(有限合伙)',
-          type: '企业',
-          address: '杭州余杭区'
-        },
-      ],
+      moreUlData: [],
       moreUlSelect: -1,
-      moreUlSelectNum: 7,
+      moreUlSelectNum: 10,
       moreUlSelectText: '请输入公司名称或地址展示周围企业',
       empty: false
     }
@@ -111,7 +60,7 @@ export default {
     ]),
     searchClick() {},
     searchInput() {
-      const url = ''
+      const url = '/standardgwapi/api/company_library/map/suggest'
       const data = {
         keyword: this.inputValue
       }
@@ -128,20 +77,20 @@ export default {
       if (keyCode === 'ArrowDown') {
         if (this.moreUlSelect == -1 || this.moreUlSelect == this.moreUlSelectNum) {
           this.moreUlSelect = 0
-          this.moreUlSelectText = this.moreUlData[0].title
+          this.inputValue = this.moreUlData[0].companyName
         }else {
           this.moreUlSelect ++
-          this.moreUlSelectText = this.moreUlData[this.moreUlSelect].title
+          this.inputValue = this.moreUlData[this.moreUlSelect].companyName
         }
       }else if(keyCode === 'ArrowUp'){
        if (this.moreUlSelect == -1 || this.moreUlSelect == 0) {
            this.moreUlSelect = this.moreUlSelectNum
-         this.moreUlSelectText = this.moreUlData[this.moreUlSelect].title
+         this.inputValue = this.moreUlData[this.moreUlSelect].companyName
 
        }
         else {
           this.moreUlSelect--
-         this.moreUlSelectText = this.moreUlData[this.moreUlSelect].title
+         this.inputValue = this.moreUlData[this.moreUlSelect].companyName
 
        }
       }else if(keyCode === 'Enter') {
@@ -173,11 +122,16 @@ export default {
   },
   computed: {
     ...mapState([
-      'keyword'
+      'keyword',
     ]),
     placeholderText: function () {
-      return  this.moreUlSelectText
+      return this.moreUlSelectText
     }
+  },
+  watch: {
+    inputValue: function (val) {
+      this.setKeyword(val)
+    },
   }
 }
 </script>
@@ -207,7 +161,9 @@ export default {
     list-style-type: none;
     padding: 0 0;
     width: 100%;
-    max-height: 320px;
+    max-height: 356px;
+    padding-bottom: 12px;
+    margin-bottom: 0;
     li {
       display: flex;
       align-items: center;
@@ -215,6 +171,7 @@ export default {
       height: 36px;
       margin-left: -12px;
       padding-left: 12px;
+      cursor: pointer;
       &:hover,&.active {
         background: #F7F7FC;
       }
@@ -250,9 +207,13 @@ export default {
           font-family: MicrosoftYaHei;
           margin-left: 12px;
           width: 72px;
+          height: 20px;
           font-size: 12px;
           color: #7D7D94;
           line-height: 20px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
         }
 
         /deep/ em.hl {

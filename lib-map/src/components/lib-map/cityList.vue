@@ -221,7 +221,7 @@ export default {
       }
     },
     getCityList() {
-      const url = 'http://software.myhexin.com/yapi/mock/2486/standardgwapi/api/company_library/map/area_config'
+      const url = '/standardgwapi/api/company_library/map/area_suggest'
       this.$getAxios(url, undefined, res => this.handleCityList(res))
     },
     handleCity(str) {

@@ -47,8 +47,10 @@
             <span class="item-title">{{item.name}}</span>
 
             <el-cascader
+              ref="cascader"
               placeholder="请选择"
               @change="value => onChange(value, item)"
+              :options="item.children"
               v-if="item.symbol =='industry'"
               :props="props"
               style="width: 96px;height: 24px"
@@ -159,11 +161,12 @@
         <div class="pagination">
           <a-pagination
             v-model="pagination.current"
-            :total="pagination.total"
+            :total="total"
             :show-total="(total) => `共${total}条`"
             :size="'small'"
             show-size-changer
             show-quick-jumper
+            @change="pageChange"
           >
           </a-pagination>
         </div>
@@ -178,17 +181,28 @@
 
 <script>
 import mapPie from "@/components/charts/mapPie";
+import { mapState, mapMutations } from 'vuex'
+
+const chartName = {
+  industry: '二级行业统计TOP5',
+  listed_state: '上市状态统计',
+  financing_rounds: '融资进程统计',
+  capital: '注册资本区间统计',
+  staff_num: '公司人数区间统计',
+  state: '经营状态统计',
+  type: '企业类型统计',
+  establish_time: '年份区间统计'
+}
 export default {
   name: "drawer",
   data() {
     return {
-      select: [],
+      select: [], //companyConfig的元数据
       selectOption: {},
       optionSelected: null,
       selectContentHigh: '30px',
       configOption: {},
       isExpand: false,
-      chartData: [],
       companyList: [],
       chartList: [
         {
@@ -237,7 +251,7 @@ export default {
       //el-cascader 配置
       props: {
         multiple: true,
-        checkStrictly: true,
+        // checkStrictly: true,
         expandTrigger: 'hover'
       },
       drawerVisible: false,
@@ -245,10 +259,18 @@ export default {
         current: 1,
         total: 0,
         pageSize: 10,
-      }
+      },
+      big_industry: '',
+      small_industry: '',
+      third_industry: '',
+      total: 0
     }
   },
   computed: {
+    ...mapState([
+      'companyConfig',
+      'companyMap'
+    ]),
     styleObject: function () {
       return {
         high: this.selectContentHigh
@@ -280,6 +302,9 @@ export default {
     this.getData()
   },
   methods: {
+    ...mapMutations([
+      'setCompanyConfig'
+    ]),
     //antdv 悬浮自动展开
     displayRender({ labels }) {
       return labels[labels.length - 1];
@@ -311,8 +336,9 @@ export default {
       //三种组件：单选、多选、级联多选。 el.select 区分单选多选；el.symbol == 'industry'是唯一一个级联多选
       let valueStr,labelStr,isSelect
       if (el.symbol == 'industry') {
-        value.forEach(item => item = item.split('-')[1])
-        labelStr = value.join(',')
+        let CheckedNodes  = this.$refs['cascader'][0].getCheckedNodes()
+        CheckedNodes = CheckedNodes.filter(option => !(option.parent && option.parent.checked))
+        labelStr = this.setCascader(CheckedNodes)
         valueStr = labelStr
       }else if(el.select){
         labelStr = value&&value.label
@@ -329,6 +355,7 @@ export default {
         })
       }
 
+      //已选配置项
       this.select.forEach((item, index) => {
         if(item.symbol == el.symbol) {
           if(valueStr == undefined) {
@@ -343,6 +370,24 @@ export default {
         }
       })
 
+      //图表配置项（如果筛选项选中了图表对应的配置，则对应的图表不再展示）
+
+      this.chartList.forEach((item, index) => {
+          if (item.value == el.symbol) {
+            if(valueStr == undefined) {
+              this.getChartData(item).then()
+              this.chartList.push({
+                data:[],
+                name:chartName[el.symbol],
+                value: el.symbol
+              })
+            }else {
+              this.chartList.splice(index, 1)
+            }
+          }
+        }
+      )
+
       if(!isSelect) {
         this.select.push({
           value: valueStr,
@@ -351,6 +396,41 @@ export default {
           symbol: el.symbol
         })
       }
+      console.log('select', this.select)
+      this.handleConfig()
+      this.getCompanyList()
+      this.chartList.forEach(item => this.getChartData(item))
+    },
+    //行业数据级联多选 需要特殊处理
+    setCascader(CheckedNodes) {
+      let label= [],big_industry_arr=[],small_industry_arr=[],third_industry_arr=[]
+      CheckedNodes.forEach(item => {
+        const labelArr = [item.label]
+        // 搜索时的参数
+        switch (item.level) {
+          case 1:
+            // field = 'big_industry';
+            big_industry_arr.push(item.label)
+            break
+          case 2:
+            small_industry_arr.push(item.label)
+            break
+          case 3:
+            third_industry_arr.push(item.label)
+        }
+        // 展示用的label
+        for (let i = item.level ; i > 1 ;i--){
+          labelArr.unshift(item.parent.label)
+        }
+        label.push(labelArr.join('-'))
+      })
+
+
+      this.big_industry = big_industry_arr.join(',')
+      this.small_industry = small_industry_arr.join(',')
+      this.third_industry = third_industry_arr.join(',')
+
+      return label.join(',')
     },
 
     onSelect(value) {
@@ -360,11 +440,12 @@ export default {
     removeAllSelect() {
       this.select = []
       this.selectOption = {}
+      this.handleConfig()
     },
 
     getCompanyConfig () {
-      // const url = '/standardgwapi/api/company_library/map/search_config'
-      const url = 'http://software.myhexin.com/yapi/mock/2486/standardgwapi/api/company_library/map/search_config'
+    //  const url = '/standardgwapi/api/company_library/map/search_config'
+       const url = 'http://software.myhexin.com/yapi/mock/2486/standardgwapi/api/company_library/map/search_config'
       const data = {
         searchType: 'map'
       }
@@ -380,29 +461,45 @@ export default {
     },
 
     getChartData(item) {
-      // standardgwapi/api/standardgwapi/api/company_library/map/chart
-      const url = 'http://software.myhexin.com/yapi/mock/2486/standardgwapi/api/standardgwapi/api/company_library/map/chart'
+      const url = '/standardgwapi/api/company_library/map/chart'
+      //const url = 'http://software.myhexin.com/yapi/mock/2486/standardgwapi/api/standardgwapi/api/company_library/map/chart'
       const data = {
         aggfield: item.value
       }
+      Object.assign(data, this.companyConfig)
      return this.$getAxios(url, data, res => {
         if(res.code == 1) {
           item.data = res.data.items
+          if(item.data.length == 0) {
+            this.chartList.forEach((item, index) => {
+              if(item.value = data.aggfield) {
+                this.chartList.splice(index, 1)
+              }
+            })
+          }
         }
       })
     },
 
     getCompanyList() {
-      // /standardgwapi/api/company_library/map/company_list
-      const url = `http://software.myhexin.com/yapi/mock/2486/standardgwapi/api/company_library/map/company_list`
+       const url = '/standardgwapi/api/company_library/map/company_list'
+     // const url = `http://software.myhexin.com/yapi/mock/2486/standardgwapi/api/company_library/map/company_list`
       const data = {
-        searchType: 'map'
+        searchType: 'map',
+        page: this.pagination.current,
+        pagesize: this.pagination.pageSize
       }
 
-     return  this.$getAxios(url, data, res => {
+      Object.assign(data, this.companyConfig, this.companyMap)
+
+     return this.$getAxios(url, data, res => {
         if(res.code == 1) {
           this.companyList = res.data.items
           this.backNum ++
+          this.total = res.data.total
+          (res.data.total > 10000) ? this.pagination.total = 1000 : res.data.total
+
+
           // this.skeleton = false
         }
       })
@@ -416,6 +513,7 @@ export default {
         }
       })
       this.selectOption[item.symbol] = undefined
+      this.handleConfig()
     },
     // 对于每个配置项 设置一个v-model，用于删除筛选条件时恢复下方筛选器
 
@@ -437,6 +535,25 @@ export default {
     //  console.log(item)
 
       this.$emit('handleSet', item.coordinates)
+    },
+
+    handleConfig() {
+      const config = {}
+      this.select.forEach(item => {
+        if(item.symbol === "industry") {
+          this.big_industry && (config.big_industry = this.big_industry)
+          this.small_industry && (config.small_industry = this.small_industry)
+          this.third_industry && (config.third_industry = this.third_industry)
+        }else {
+          config[item.symbol] = item.value
+        }
+      })
+      console.log('config', config)
+      this.setCompanyConfig(config)
+    },
+
+    pageChange(p) {
+      console.log(p)
     }
   }
 }
