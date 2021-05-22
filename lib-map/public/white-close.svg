@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>矩形 3</title>
+    <g id="组件" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="矩形">
+            <path d="M0,0 L21,0 C22.6568542,-3.04359188e-16 24,1.34314575 24,3 L24,24 L24,24 C10.745166,24 1.623249e-15,13.254834 0,0 L0,0 L0,0 Z" fill="#ECECF7"></path>
+            <rect x="7" y="1" width="16" height="16"></rect>
+            <g id="系统关闭" transform="translate(10.000000, 4.000000)" fill="#757699">
+                <path d="M8.00116393,0.97017675 L9.0618241,2.03083692 L6.05809612,5.03324483 L9.06567139,8.04031264 L8.00501121,9.10097281 L4.99809612,6.09424483 L1.99075629,9.10190473 L0.930096116,8.04124456 L3.93709612,5.03324483 L0.933943403,2.029905 L1.99460357,0.96924483 L4.99809612,3.97324483 L8.00116393,0.97017675 Z" id="形状结合"></path>
+            </g>
+        </g>
+    </g>
+</svg>

@@ -225,6 +225,7 @@ export default {
       this.$getAxios(url, undefined, res => this.handleCityList(res))
     },
     handleCity(str) {
+      debugger
       this.currentCity = str
       this.$emit('select', str)
       this.cityVisible = false

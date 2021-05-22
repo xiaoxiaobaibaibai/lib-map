@@ -1151,7 +1151,7 @@ var BMAP_DRAWING_MARKER    = "marker",     // 鼠标画点模式
             strokeWeight: 2 // 边线的宽度，以像素为单位。
         };
 
-        var centerIcon = new BMap.Icon('./circenter.svg', new BMap.Size(20, 20));
+        var centerIcon = new BMap.Icon('./22.gif', new BMap.Size(24, 28));
         var shadow = new BMap.Icon('./maker-shadow.png', new BMap.Size(21, 33));
 
         /**
@@ -2019,7 +2019,8 @@ var BMAP_DRAWING_MARKER    = "marker",     // 鼠标画点模式
                     break;
                 case '[object Circle]':
                     var radius = overlay.getRadius();
-                    result.data = Math.PI * radius * radius;
+                    result.data = radius;
+                    console.log(radius)
                     break;
             }
             // 异常情况处理
@@ -2306,9 +2307,9 @@ var BMAP_DRAWING_MARKER    = "marker",     // 鼠标画点模式
         }
 
         div.innerHTML = html;
-        this._map.addEventListener('resize', function (e) {
-            me._adjustSize(e.size);
-        });
+        // this._map.addEventListener('resize', function (e) {
+        //     me._adjustSize(e.size);
+        // });
         this._map.getPanes().markerPane.appendChild(div);
         this._bind();
         return div;

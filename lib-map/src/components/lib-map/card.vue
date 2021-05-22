@@ -6,9 +6,6 @@
       <span class="flex_2">存续</span>
       浙江核心同花顺网络信息股份有限公司
     </p>
-<!--    <span class="close">-->
-<!--      <a-icon type="close"></a-icon>-->
-<!--    </span>-->
   </section>
   <section>
     <p class="desc">
